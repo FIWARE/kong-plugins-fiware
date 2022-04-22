@@ -93,6 +93,7 @@ function NgsiIshareHandler:access(config)
    local token_type = type(req_token)
    if token_type ~= "string" then
       if token_type == "nil" then
+	 kong.log.debug("No access token provided")
 	 return handle_error(401, "Unauthorized")
       elseif token_type == "table" then
 	 return handle_error(401, "Multiple tokens provided")
