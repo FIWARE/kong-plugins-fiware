@@ -38,7 +38,7 @@ return {
 			     type = "set",
 			     elements = { type = "string" },
 			     default = {}
-			}, }
+			}, },
 		     }
 		  }
 	       },
@@ -130,7 +130,7 @@ return {
 			{ trusted_list_endpoint = {
 			     type = "string",
 			     required = false,
-			},  }
+			},  },
 		     }
 		  }
 	       }
@@ -148,14 +148,14 @@ return {
       { conditional = {
 	   if_field = "config.jws.root_ca_file", if_match = { eq = nil },
 	   then_field = "config.satellite.host", then_match = { required = true },
-      } }
+      } },
       { conditional = {
 	   if_field = "config.jws.root_ca_file", if_match = { eq = nil },
 	   then_field = "config.satellite.token_endpoint", then_match = { required = true },
-      } }
+      } },
       { conditional = {
 	   if_field = "config.jws.root_ca_file", if_match = { eq = nil },
 	   then_field = "config.satellite.trusted_list_endpoint", then_match = { required = true },
-      } }
-  },
+      } },
+   },
 }

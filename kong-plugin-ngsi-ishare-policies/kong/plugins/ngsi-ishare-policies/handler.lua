@@ -30,14 +30,14 @@ end
 local function read_token(conf)
 
    local args = kong.request.get_query()
-   for _, v in ipairs(conf.uri_param_names) do
+   for _, v in ipairs(conf.access_token.uri_param_names) do
       if args[v] then
 	 return args[v]
       end
    end
 
    local var = ngx.var
-   for _, v in ipairs(conf.cookie_names) do
+   for _, v in ipairs(conf.access_token.cookie_names) do
       local cookie = var["cookie_" .. v]
       if cookie and cookie ~= "" then
 	 return cookie
@@ -45,7 +45,7 @@ local function read_token(conf)
    end
 
    local request_headers = kong.request.get_headers()
-   for _, v in ipairs(conf.header_names) do
+   for _, v in ipairs(conf.access_token.header_names) do
       local token_header = request_headers[v]
       if token_header then
 	 if type(token_header) == "table" then
@@ -83,7 +83,7 @@ end
 function NgsiIshareHandler:access(config)
    NgsiIshareHandler.super.access(self)
    kong.log.debug(" *** NGSI-iSHARE-Policies plugin access() function entered ***")
-
+   
    -- Get JWT from request
    kong.log.debug("Reading access token from request")
    local req_token, err = read_token(config)
