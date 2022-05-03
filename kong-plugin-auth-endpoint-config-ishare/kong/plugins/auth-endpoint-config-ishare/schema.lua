@@ -55,13 +55,14 @@ return {
 			-- Private key (PEM format)
 			{ private_key = {
 			     type = "string",
-			     required = true,
+			     required = false,
+			     default = nil
 			},  },
-			-- x5c chain (array of certificates in PEM format)
+			-- x5c certificates chain (PEM format)
 			{ x5c = {
-			     type = "array",
-			     required = true,
-			     elements = { type = "string" },
+			     type = "string",
+			     required = false,
+			     default = nil
 			},  },
 			-- Path to Root CA file (required if no iSHARE Satellite information is provided)
 			{ root_ca_file = {

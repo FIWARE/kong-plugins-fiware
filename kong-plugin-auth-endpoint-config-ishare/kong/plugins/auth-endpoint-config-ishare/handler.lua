@@ -113,6 +113,28 @@ function AuthEndpointConfigHandler:access(config)
    proxy_config.authorisation_registry = config.ar
    proxy_config.satellite = config.satellite
 
+   -- Check for JWS parameters (key/x5c) as ENVs
+   local env_key = os.getenv("FIWARE_JWS_PRIVATE_KEY")
+   local env_x5c = os.getenv("FIWARE_JWS_X5C")
+   if not config.jws.private_key then
+      if env_key then
+	 kong.log.debug("Reading private key from ENV 'FIWARE_JWS_PRIVATE_KEY'")
+	 proxy_config.jws.private_key = env_key
+      else
+	 kong.log.error("No private key configured")
+	 return handle_error(500, "Internal error")
+      end
+   end
+   if not config.jws.x5c then
+      if env_x5c then
+	 kong.log.debug("Reading x5c certificate chain from ENV 'FIWARE_JWS_X5C'")
+	 proxy_config.jws.x5c = env_x5c
+      else
+	 kong.log.error("No x5c certificate chain configured")
+	 return handle_error(500, "Internal error")
+      end
+   end
+
    -- Build request dict
    local req_dict = {}
    req_dict.token = req_token
