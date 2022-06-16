@@ -87,8 +87,11 @@ jobs:
       
       - name: Make rock
         run: |
-          luarocks make --pack-binary-rock kong-plugin-auth-endpoint-config-ishare/kong-plugin-auth-endpoint-config-ishare-${{ needs.generate-version.outputs.plain-version }}-1.rockspec
-          luarocks make --pack-binary-rock kong-plugin-ngsi-ishare-policies/kong-plugin-ngsi-ishare-policies-${{ needs.generate-version.outputs.plain-version }}-1.rockspec
+          cd kong-plugin-auth-endpoint-config-ishare
+          luarocks make --pack-binary-rock
+          cd ..
+          cd kong-plugin-ngsi-ishare-policies
+          luarocks make --pack-binary-rock
           mkdir plugin-dir
           cp kong-plugin-auth-endpoint-config-ishare/*.rock  plugin-dir/
           cp kong-plugin-ngsi-ishare-policies/*.rock  plugin-dir/
