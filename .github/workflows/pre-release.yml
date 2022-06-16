@@ -112,5 +112,5 @@ jobs:
             ./Dockerfile
           context: ./
           build-args: |
-            KONG_BASE=kong:0.14.1-alpine
+            KONG_BASE=kong:2.8.1-alpine
             ROCKS_DIR=./plugin-dir
