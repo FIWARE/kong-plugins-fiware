@@ -16,6 +16,7 @@ jobs:
 
     outputs:
       version: ${{ steps.out.outputs.version }}
+      plain-version: ${{ steps.out.outputs.plain-version }}
 
     steps:
       - uses: actions/checkout@v2
@@ -37,7 +38,9 @@ jobs:
 
       - name: Set version output
         id: out
-        run: echo "::set-output name=version::$(echo ${VERSION}-PRE-${{ steps.pr_number.outputs.nr }})"
+        run: |
+          echo "::set-output name=version::$(echo ${VERSION}-PRE-${{ steps.pr_number.outputs.nr }})"
+          echo "::set-output name=plain-version::$(echo ${VERSION})"
 
   git-release:
     needs: ["generate-version"]
@@ -70,14 +73,14 @@ jobs:
         run: | 
           echo GITHUB_ORGANISATION: fiware >> values.yaml
           echo GITHUB_REPO: kong-plugins-fiware >> values.yaml
-          echo VERSION: ${{ needs.generate-version.outputs.version }} >> values.yaml
+          echo VERSION: ${{ needs.generate-version.outputs.plain-version }} >> values.yaml
 
 
       - name: Parse rockspec
         run: |
           go install github.com/cbroglie/mustache/cmd/mustache@v1.3.1
-          ~/go/bin/mustache values.yaml kong-plugin-auth-endpoint-config-ishare/rockspec.mustache > kong-plugin-auth-endpoint-config-ishare-${{ needs.generate-version.outputs.version }}-1.rockspec
-          ~/go/bin/mustache values.yaml kong-plugin-auth-endpoint-config-ishare/rockspec.mustache > kong-plugin-auth-endpoint-config-ishare-${{ needs.generate-version.outputs.version }}-1.rockspec
+          ~/go/bin/mustache values.yaml kong-plugin-auth-endpoint-config-ishare/rockspec.mustache > kong-plugin-auth-endpoint-config-ishare-${{ needs.generate-version.outputs.plain-version }}-1.rockspec
+          ~/go/bin/mustache values.yaml kong-plugin-auth-endpoint-config-ishare/rockspec.mustache > kong-plugin-auth-endpoint-config-ishare-${{ needs.generate-version.outputs.plain-version }}-1.rockspec
       
       - uses: leafo/gh-actions-lua@v9
       - uses: leafo/gh-actions-luarocks@v4
