@@ -1,26 +1,28 @@
 -- Package 
-local plugin_name = "ngsi-ishare-policies"
+local plugin_name = "auth-endpoint-config-ishare"
 local package_name = "kong-plugin-" .. plugin_name
 package = package_name
 
 -- Version
-local package_version = "0.0.1"
+local package_version = "{{VERSION}}"
 local rockspec_revision = "1"
 version = package_version .. "-" .. rockspec_revision
 
 -- GitHub source
-local github_account_name = "dwendland"
-local github_repo_name = "kong-plugins-fiware"
+local github_account_name = "{{GITHUB_ORGANISATION}}"
+local github_repo_name = "{{GITHUB_REPO}}"
 source = {
   url = "git://github.com/"..github_account_name.."/"..github_repo_name..".git",
-  dir = github_repo_name.."/"..package_name
+  dir = github_repo_name.."/"..package_name,
+  tag = {{VERSION}}
 }
 
 -- Description
 description = {
-  summary = "Attribute-based access management for NGSI requests using the iSHARE framework",
+  summary = "Access management for FIWARE Sidecar-Proxy auth endpoint config service using the SHARE framework",
   detailed = [[
-  	   Inspects NGSI requests and checks for corresponding attribute-based access policies.
+  	   Manages access to the authorization endpoint configuration service required for the Sidecar-Proxy and
+	   checks for corresponding access policies at authorisation registry.
 	   Requires an EORI and key/certificate issued by an authority and registered at an
 	   iSHARE Scheme Owner/Satellite.
 	   Also requires an iSHARE-compliant authorisation registry for accessing the iSHARE policies.
