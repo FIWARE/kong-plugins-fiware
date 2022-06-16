@@ -11,19 +11,7 @@ on:
 
 jobs:
 
-  test:
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - uses: actions/checkout@v2
-
-      - name: Run tests
-        run: |
-          docker run --rm -v $PWD:/fiware openresty/openresty:1.19.9.1-10-alpine-fat /bin/bash -c 'cd /fiware && ./run_tests.sh'
-
   generate-version:
-    needs: ["test"]
     runs-on: ubuntu-latest
 
     outputs:
