@@ -79,8 +79,8 @@ jobs:
       - name: Parse rockspec
         run: |
           go install github.com/cbroglie/mustache/cmd/mustache@v1.3.1
-          ~/go/bin/mustache values.yaml kong-plugin-auth-endpoint-config-ishare/rockspec.mustache > kong-plugin-auth-endpoint-config-ishare-${{ needs.generate-version.outputs.plain-version }}-1.rockspec
-          ~/go/bin/mustache values.yaml kong-plugin-auth-endpoint-config-ishare/rockspec.mustache > kong-plugin-auth-endpoint-config-ishare-${{ needs.generate-version.outputs.plain-version }}-1.rockspec
+          ~/go/bin/mustache values.yaml kong-plugin-auth-endpoint-config-ishare/rockspec.mustache > kong-plugin-auth-endpoint-config-ishare/kong-plugin-auth-endpoint-config-ishare-${{ needs.generate-version.outputs.plain-version }}-1.rockspec
+          ~/go/bin/mustache values.yaml kong-plugin-ngsi-ishare-policies/rockspec.mustache > kong-plugin-ngsi-ishare-policies/kong-plugin-ngsi-ishare-policies-${{ needs.generate-version.outputs.plain-version }}-1.rockspec
       
       - uses: leafo/gh-actions-lua@v9
       - uses: leafo/gh-actions-luarocks@v4
