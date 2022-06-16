@@ -87,7 +87,7 @@ jobs:
       
       - name: Make rock
         run: |
-          luarocks install lua-fiware-lib
+          luarocks install lua-fiware-lib 0.0.4-1
           cd kong-plugin-auth-endpoint-config-ishare
           luarocks make --pack-binary-rock
           cd ..
