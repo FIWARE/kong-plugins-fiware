@@ -55,7 +55,7 @@ jobs:
           title: ${{ needs.generate-version.outputs.version }}
   
   pre-release-kong:
-    needs: ["git-release"]
+    needs: ["git-release", "generate-version"]
     runs-on: ubuntu-latest
 
     steps:
