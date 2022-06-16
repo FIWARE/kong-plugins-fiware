@@ -9,7 +9,6 @@ jobs:
 
 
   generate-version:
-    needs: ["test"]
     runs-on: ubuntu-latest
 
     outputs:
