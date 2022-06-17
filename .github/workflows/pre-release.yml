@@ -119,7 +119,7 @@ jobs:
 
       - name: Build and push
         run: |
-          docker build --build-arg KONG_BASE="kong:2.8.1-alpine" --build-arg PLUGINS="kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir" --tag quay.io/fiware/kong:${{ needs.generate-version.outputs.version }} .
+          docker build --build-arg KONG_BASE="kong:2.8.1-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir" --tag quay.io/fiware/kong:${{ needs.generate-version.outputs.version }} .
           
           docker push quay.io/fiware/kong:${{ needs.generate-version.outputs.version }}
 
