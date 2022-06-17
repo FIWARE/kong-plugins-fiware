@@ -98,7 +98,8 @@ jobs:
           mkdir plugin-dir
           cp -r kong-plugin-auth-endpoint-config-ishare/.  plugin-dir/
           cp -r kong-plugin-ngsi-ishare-policies/.  plugin-dir/
-
+          cd plugin-dir/
+          luarocks install lua-fiware-lib
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
