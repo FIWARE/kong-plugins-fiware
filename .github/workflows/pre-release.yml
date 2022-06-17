@@ -96,8 +96,8 @@ jobs:
           luarocks pack kong-plugin-ngsi-ishare-policies ${{ needs.generate-version.outputs.plain-version }}-1
           cd ..
           mkdir plugin-dir
-          cp kong-plugin-auth-endpoint-config-ishare/kong-plugin-auth-endpoint-config-ishare-${{ needs.generate-version.outputs.plain-version }}-1.all.rock  plugin-dir/
-          cp kong-plugin-ngsi-ishare-policies/kong-plugin-ngsi-ishare-policies-${{ needs.generate-version.outputs.plain-version }}-1.all.rock  plugin-dir/
+          cp kong-plugin-auth-endpoint-config-ishare/.  plugin-dir/
+          cp kong-plugin-ngsi-ishare-policies/.  plugin-dir/
 
 
       - name: Set up QEMU
