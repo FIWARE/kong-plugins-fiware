@@ -119,7 +119,7 @@ jobs:
           docker build \
             --build-arg KONG_BASE="kong:2.8.1-alpine" \
             --build-arg ROCKS_DIR="./plugin-dir" \
-            --build-arg TEMPLATE=""
+            --build-arg TEMPLATE="" \
             --tag quay.io/fiware/kong:${{ needs.generate-version.outputs.version }} \
             .
           
