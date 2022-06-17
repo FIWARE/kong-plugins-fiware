@@ -113,13 +113,14 @@ jobs:
       - name: Get dockerfiles
         run: |
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/Dockerfile
+          wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/empty_file
+          wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/packer.lua
 
       - name: Build and push
         run: |
           docker build \
             --build-arg KONG_BASE="kong:2.8.1-alpine" \
             --build-arg ROCKS_DIR="./plugin-dir" \
-            --build-arg TEMPLATE="" \
             --tag quay.io/fiware/kong:${{ needs.generate-version.outputs.version }} \
             .
           
