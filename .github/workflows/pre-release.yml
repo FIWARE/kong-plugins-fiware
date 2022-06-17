@@ -100,6 +100,7 @@ jobs:
           cp -r kong-plugin-ngsi-ishare-policies/.  plugin-dir/
           cd plugin-dir/
           luarocks install lua-fiware-lib
+          luarocks pack lua-fiware-lib 
           ls
 
       - name: Set up QEMU
