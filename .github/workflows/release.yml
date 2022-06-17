@@ -112,7 +112,7 @@ jobs:
 
   kong: 
 
-    needs: [ "git-release", "generate-version" ]
+    needs: ["git-release", "generate-version", "ngsi-ishare-policies", "auth-endpoint-config-ishare"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
