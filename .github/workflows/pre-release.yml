@@ -101,6 +101,8 @@ jobs:
           cd plugin-dir/
           luarocks install lua-fiware-lib
           luarocks pack lua-fiware-lib 
+          luarocks install lua-resty-jwt
+          luarocks pack lua-resty-jwt
           ls
 
       - name: Set up QEMU
