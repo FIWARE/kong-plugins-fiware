@@ -157,8 +157,12 @@ In this case, this would allow two different operations of NGSI-LD requests:
 Using such policies, access can be controlled on a fine-granular basis. The policy parameters match to 
 the following characteristics of NGSI-LD requests:
 * `type`: Entity type
-* `identifiers`: Entity IDs (array)
-* `attributes`: Entity attributes (array)
+  - In the case of subscriptions, this specifies the entity types that are being watched for (only for `POST:Subscription` and `PATCH:Subscription`)
+* `identifiers`: Entity IDs (array), wildcard `*` allowed
+  - In the case of a notification this could specify the corresponding `subscriptionId`
+  - In the case of subscriptions this could specify the ID of the subscription
+* `attributes`: Entity attributes (array), wildcard `*` allowed
+  - In the case of subscriptions, this specifies the entity attributes for the subscribed notification (only for `POST:Subscription` and `PATCH:Subscription`)
 * `actions`: Type of method
   - `GET`: Read entity
   - `POST`: Create entity
