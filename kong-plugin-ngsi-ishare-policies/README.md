@@ -91,8 +91,8 @@ service consumer. The delegation evidence would need to be stored at the
 connected AR of the service provider in order that the plugin would grant access for these specific NGSI-LD 
 operations by the specified service consumer.  
 In this case, this would allow two different operations of NGSI-LD requests:
-* A `PATCH` (Update Entity) request, only for a specific entity type and ID and only for the attributes `attr1` and `attr2`
-* A `GET` (Read Entity) request, allowing to read the full entities of a specific type but with any ID
+* A `PATCH` (Update Entity) request, only for a specific entity `type` and `ID` and only for the attributes `attr1` and `attr2`
+* A `GET` (Read Entity) request, allowing to read the full entities of a specific `type` but with any `ID`
 
 ```json
 {
@@ -172,7 +172,7 @@ the following characteristics of NGSI-LD requests:
   - `POST:Subscription`: Create subscription
   - `PATCH:Subscription`: Update subscription
   - `DELETE:Subscription`: Delete subscription
-  - `POST:Notification`: Allow for a notification based on a subscription send by a FIWARE Context Broker. Note, that in this case the service endpoint does not need to be a context broker instance but rather can be any service receiving such notifications 
+  - `POST:Notification`: Allow for a notification based on a subscription send by a FIWARE Context Broker. Note, that in this case the service endpoint does not need to be a context broker instance but rather can be any service capable of receiving such notifications 
 
 In order to identify, the consumer needs to obtain an access token before sending the 
 NGSI-LD request to the API-Gateway. This must be obtained at an iSHARE-compliant 
