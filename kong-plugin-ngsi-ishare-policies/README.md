@@ -183,7 +183,7 @@ would then have the following structure
     "iss": "<SERVICE_PROVIDER_EORI>",
     "sub": "<SERVICE_CONSUMER_EORI>",
     "jti": "99ab5bca41bb45b78d242a46f0157b7d",
-    "iat": "1540827435",
+    "iat": 1540827435,
     "exp": 1540827465,
     "nbf": 1540827435,
     "aud": "<SERVICE_PROVIDER_EORI>",
@@ -237,7 +237,7 @@ the login process. The (decoded) JWT would have the following structure at least
                   ]
                 },
                 "actions": [
-                  “GET”
+                  "GET"
                 ]
               },
               "rules": [
