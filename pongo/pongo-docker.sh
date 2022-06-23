@@ -13,6 +13,7 @@
 function main {
 
   PONGO_VERSION_DEFAULT="1.1.0"
+  IMAGE_NAME_DEFAULT="pongo"  
   KONG_VERSION_DEFAULT="2.8.1"
   #KONG_IMAGE_DEFAULT="kong/kong-alpine"
   
@@ -24,6 +25,10 @@ function main {
 
   if [[ -z $PONGO_VERSION ]]; then
     PONGO_VERSION=$PONGO_VERSION_DEFAULT
+  fi
+
+  if [[ -z $IMAGE_NAME ]]; then
+    IMAGE_NAME=$IMAGE_NAME_DEFAULT
   fi
 
   if [[ -z $KONG_VERSION ]]; then
@@ -41,7 +46,7 @@ function main {
     -e "KONG_VERSION=$KONG_VERSION" \
     -e "KONG_IMAGE=$KONG_IMAGE" \
     --cidfile "$PONGO_PLUGIN_SOURCE/.containerid" \
-    "pongo:$PONGO_VERSION" "$@"
+    "$IMAGE_NAME:$PONGO_VERSION" "$@"
 
   local result=$?
 
