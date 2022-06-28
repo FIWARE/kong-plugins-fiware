@@ -80,10 +80,12 @@ jobs:
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/empty_file
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/packer.lua
 
-      - name: Insert go plugins
+      - name: Insert pep plugin
         run: |
+          cat ./kong-pep-plugin/docker-stage/Dockerfile | cat - Dockerfile > Dockerfile.tmp && mv Dockerfile.tmp Dockerfile
+
           echo "USER root" >> Dockerfile
-          echo "COPY ./go-plugins/ /kong/go-plugins/" >> Dockerfile 
+          echo "COPY --from=build-pep-plugin /temp/pep-plugin /kong/go-plugins/" >> Dockerfile 
           echo "RUN chmod -R 777 /kong/go-plugins/" >> Dockerfile
           echo "USER kong" >> Dockerfile
           cat Dockerfile
