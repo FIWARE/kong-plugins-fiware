@@ -1,0 +1,150 @@
+---
+# Source: keyrock/charts/keyrock/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keyrock
+  labels:
+    
+    app.kubernetes.io/name: keyrock
+    helm.sh/chart: keyrock-0.4.4
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "8.1.0"
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+data:
+  dbPassword: cGFzc3dvcmQ=
+  adminPassword: YWRtaW4=
+---
+# Source: keyrock/charts/keyrock/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: keyrock
+  labels:
+    
+    app.kubernetes.io/name: keyrock
+    helm.sh/chart: keyrock-0.4.4
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "8.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: keyrock
+    app.kubernetes.io/instance: release-name
+---
+# Source: keyrock/charts/keyrock/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: keyrock
+  labels:
+    
+    app.kubernetes.io/name: keyrock
+    helm.sh/chart: keyrock-0.4.4
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "8.1.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  serviceName: keyrock
+  replicas: 1
+  revisionHistoryLimit: 3
+  updateStrategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keyrock
+      app.kubernetes.io/instance: release-name
+      app: keyrock
+  template:
+    metadata:
+      labels:
+        app: keyrock
+        
+        app.kubernetes.io/name: keyrock
+        helm.sh/chart: keyrock-0.4.4
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/version: "8.1.0"
+        app.kubernetes.io/managed-by: Helm
+    spec: 
+      serviceAccountName: default
+      containers:
+        - name: keyrock
+          imagePullPolicy: Always
+          image: "fiware/idm:8.0.0"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 31
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 30
+          env:
+            - name: IDM_PORT
+              value: "8080"
+            - name: IDM_HOST
+              value: http://localhost
+            - name: IDM_DB_HOST
+              value: "mysql"
+            - name: IDM_DB_PASS
+              valueFrom:
+                 secretKeyRef:
+                   name: keyrock
+                   key: dbPassword
+            - name: IDM_DB_USER
+              value: "root"
+            - name: IDM_ADMIN_USER
+              value: "admin"
+            - name: IDM_ADMIN_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: keyrock
+                  key: adminPassword
+            - name: IDM_ADMIN_EMAIL
+              value: "admin@fiware.org"
+            #will be handled by the ingress
+            - name: IDM_HTTPS_ENABLED
+              value: "false"
+            - name: IDM_OIDC_JWT_ALGORITHM
+              value: "HS256"
+            - name: IDM_TITLE
+              value: FIWARE IDM
+            - name: IDM_DEBUG
+              value: "true"
+            - name: DEBUG
+              value: '*'
+            - name: IDM_DB_NAME
+              value: idm
+            - name: IDM_DB_SEED
+              value: "true"
+            - name: IDM_EMAIL_SECURE
+              value: "false"
+            - name: IDM_EMAIL_AUTH_ENABLE
+              value: "true"
+            - name: IDM_EMAIL_AUTH_TYPE
+              value: login
+            - name: IDM_REGISTRATION_EXTENSION
+              value: /?new_user=1
+            - name: IDM_CSP_FORM_ACTION
+              value: '''self'',*'
+            - name: IDM_HOST
+              value: keyrock
