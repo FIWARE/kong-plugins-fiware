@@ -28,7 +28,7 @@ jobs:
 
       - run: |
           cd ./kong-pep-plugin
-          go build -o pep-plugin
+          go build -o pep-plugin .
           cd ..
           mkdir ./go-plugins/
           cp ./kong-pep-plugin/pep-plugin ./go-plugins/pep-plugin
