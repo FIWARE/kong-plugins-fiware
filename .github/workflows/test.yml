@@ -39,8 +39,6 @@ jobs:
         with:
           name: test-image
           path: /tmp/test-image.tar
-
-
           
   ngsi-ishare-policies:
 

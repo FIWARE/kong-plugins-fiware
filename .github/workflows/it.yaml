@@ -1,0 +1,91 @@
+name: Integration tests
+
+on:
+  push
+
+env:
+  KONG_VERSION: 2.8.1
+
+jobs:
+
+  prepare-and-run:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '17'
+          java-package: jdk
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.17.0'
+
+      - run: |
+          go build -o pep-plugin ./kong-pep-plugin
+    
+      - name: Prepare values
+        run: | 
+          echo GITHUB_ORGANISATION: fiware >> values.yaml
+          echo GITHUB_REPO: kong-plugins-fiware >> values.yaml
+          echo VERSION: 0.0.1 >> values.yaml
+
+
+      - name: Parse rockspec
+        run: |
+          go install github.com/cbroglie/mustache/cmd/mustache@v1.3.1
+          ~/go/bin/mustache values.yaml kong-plugin-auth-endpoint-config-ishare/rockspec.mustache > kong-plugin-auth-endpoint-config-ishare/kong-plugin-auth-endpoint-config-ishare-0.0.1-1.rockspec
+          ~/go/bin/mustache values.yaml kong-plugin-ngsi-ishare-policies/rockspec.mustache > kong-plugin-ngsi-ishare-policies/kong-plugin-ngsi-ishare-policies-0.0.1-1.rockspec
+      
+      - uses: leafo/gh-actions-lua@v9
+      - uses: leafo/gh-actions-luarocks@v4
+      
+      - name: Make rock
+        run: |
+          cd kong-plugin-auth-endpoint-config-ishare
+          luarocks make
+          luarocks pack kong-plugin-auth-endpoint-config-ishare 0.0.1-1
+          cd ..
+          cd kong-plugin-ngsi-ishare-policies
+          luarocks make 
+          luarocks pack kong-plugin-ngsi-ishare-policies 0.0.1-1
+          cd ..
+          mkdir plugin-dir
+          cp -r kong-plugin-auth-endpoint-config-ishare/.  plugin-dir/
+          cp -r kong-plugin-ngsi-ishare-policies/.  plugin-dir/
+          cd plugin-dir/
+          luarocks install lua-fiware-lib
+          luarocks pack lua-fiware-lib 
+          luarocks install lua-resty-jwt
+          luarocks pack lua-resty-jwt
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Get dockerfiles
+        run: |
+          wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/Dockerfile
+          wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/empty_file
+          wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/packer.lua
+
+      - name: Insert go plugins
+        run: |
+          echo "\n USER root \ņ COPY ./go-plugins/ /kong/go-plugins/ \n RUN chmod -R 777 /kong/go-plugins/ \n USER kong \n" >> Dockerfile
+          cat Dockerfile
+
+      - name: Build and push
+        run: |
+          docker build --build-arg KONG_BASE="kong:${{ env.KONG_VERSION }}-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir" --tag fiware/kong:0.0.1 .
+
+      - name: Execute test
+        run: |
+          cd it/
+          mvn clean install integration-test

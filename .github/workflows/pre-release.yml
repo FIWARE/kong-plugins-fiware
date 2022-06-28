@@ -57,6 +57,27 @@ jobs:
           prerelease: true
           title: ${{ needs.generate-version.outputs.version }}
   
+  build-pep-plugin:
+    needs: ["generate-version"]
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.17.0'
+
+      - run: |
+          go build -o pep-plugin ./kong-pep-plugin
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: pep-plugin
+          path: ./pep-plugin
+      
+
   pre-release-kong:
     needs: ["git-release", "generate-version"]
     runs-on: ubuntu-latest
@@ -68,6 +89,12 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: '>=1.17.0'
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: pep-plugin
+          path: ./go-plugins/
+
 
       - name: Prepare values
         run: | 
@@ -119,9 +146,14 @@ jobs:
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/empty_file
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/packer.lua
 
+      - name: Insert go plugins
+        run: |
+          echo "\n USER root \ņ COPY ./go-plugins/ /kong/go-plugins/ \n RUN chmod -R 777 /kong/go-plugins/ \n USER kong \n" >> Dockerfile
+          cat Dockerfile
+
       - name: Build and push
         run: |
           docker build --build-arg KONG_BASE="kong:2.8.1-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir" --tag quay.io/fiware/kong:${{ needs.generate-version.outputs.version }} .
-          
+  
           docker push quay.io/fiware/kong:${{ needs.generate-version.outputs.version }}
 
