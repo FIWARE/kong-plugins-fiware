@@ -37,11 +37,11 @@ public class KeyrockKongPepIT {
 	private static final String ORION_PATH = "/orion";
 	private static final String ADMIN_EMAIL = "admin@fiware.org";
 	private static final String ADMIN_PASSWORD = "admin";
-	
+
 
 	@DisplayName("Kong should reject calls without a bearer-token to a secured path.")
 	@Test
-	void rejectWithoutToken() throws Exception {
+	public void rejectWithoutToken() throws Exception {
 
 		HttpResponse<String> response = HttpClient.newHttpClient().send(HttpRequest.newBuilder()
 				.GET()
@@ -54,7 +54,7 @@ public class KeyrockKongPepIT {
 
 	@DisplayName("Kong should reject calls without a valid bearer-token to a secured path.")
 	@Test
-	void rejectWithoutValidToken() throws Exception {
+	public void rejectWithoutValidToken() throws Exception {
 
 		String invalidToken = "Bearer myInvalidToken";
 		HttpResponse<String> response = HttpClient.newHttpClient().send(HttpRequest.newBuilder()
@@ -68,7 +68,7 @@ public class KeyrockKongPepIT {
 
 	@DisplayName("Kong should allow requests with valid tokens.")
 	@Test
-	void requestWithValidToken() throws Exception {
+	public void requestWithValidToken() throws Exception {
 		String adminToken = getAdminToken();
 
 		KeyrockApplication keyrockApplication = new KeyrockApplication();
@@ -195,6 +195,4 @@ public class KeyrockKongPepIT {
 		return authResponse.headers().map().get("X-Subject-Token").get(0);
 	}
 
-	private void createApplication() {
-	}
 }
