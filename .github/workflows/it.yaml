@@ -91,6 +91,5 @@ jobs:
         run: |
           cd it/
           mvn test-compile
+          ls
           mvn integration-test
-          export KUBECONFIG=/tmp/k3s-maven-plugin/mount/kubeconfig.yaml
-          kubectl get pods
