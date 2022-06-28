@@ -95,5 +95,5 @@ jobs:
       - name: Execute test
         run: |
           cd it/
-          ls
-          mvn test-compile integration-test
+          mvn test-compile
+          mvn integration-test
