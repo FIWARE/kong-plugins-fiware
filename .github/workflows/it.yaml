@@ -90,8 +90,7 @@ jobs:
 
       - name: Build image
         run: |
-          docker build --build-arg KONG_BASE="kong:${{ env.KONG_VERSION }}-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir" --output type=tar,dest=out.tar .
-          ls
+          DOCKER_BUILDKIT=1 docker build --build-arg KONG_BASE="kong:${{ env.KONG_VERSION }}-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir" --output type=tar,dest=kong.tar .
           cp kong.tar it/kong.tar
 
       - name: Execute test
