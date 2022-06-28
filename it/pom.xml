@@ -139,6 +139,7 @@
                             <goal>start</goal>
                             <goal>image</goal>
                             <goal>kubectl</goal>
+                            <goal>rm</goal>
                         </goals>
                         <configuration>
                             <streamLogs>true</streamLogs>
