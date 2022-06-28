@@ -43,6 +43,15 @@ Example config:
 
 The configuration above will apply the plugin to all requests on path ```/orion```. The requests will be authorized using Keyrock, running at ```https://keyrock.fiware.dev/user```. The ID of the secured app(```orion-ld```) is set in ```keyrockappid``` and the decisions will be cached for 20s.
 
+## Build 
+
+In order to provide a functional kong-plugin, the [kong/go-plugin-tool](https://hub.docker.com/r/kong/go-plugin-tool/tags) should be used. 
+Build the plugin via:
+
+```shell
+  docker run -v $(pwd):/temp/ --workdir="/temp" kong/go-plugin-tool:2.0.4-alpine-latest go build -o pep-plugin .
+```
+
 ## Decision caching
 
 Decision caching is a mechanism to improve performance for requests from the same client to the same endpoint, as for example IOT-Sensors updating their values. If enabled, the proxy will keep positive(e.g. allowed) desicion in cache for a configured time and does not request a new decision on the PDP for such calls. It only holds positive decisions, to not cache (in-correct) denies on f.e. connection issues. 
