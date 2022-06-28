@@ -5,7 +5,7 @@
     <groupId>org.fiware.kong</groupId>
     <artifactId>kong-plugin-it</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
     <name>Kong Plugin Integration Testing</name>
     <description>Test for the set of FIWARE Kong-Plugins</description>
@@ -18,6 +18,10 @@
         <version.org.junit.jupiter>5.8.2</version.org.junit.jupiter>
         <version.io.kokuwa.maven.k3s-plugin>0.5.0</version.io.kokuwa.maven.k3s-plugin>
         <version.org.apache.maven.plugins.compiler>3.10.1</version.org.apache.maven.plugins.compiler>
+        <version.org.apache.maven.plugins.install>3.0.0-M1</version.org.apache.maven.plugins.install>
+        <version.org.apache.maven.plugins.source>3.2.1</version.org.apache.maven.plugins.source>
+        <version.org.apache.maven.plugins.dependency_>3.3.0</version.org.apache.maven.plugins.dependency_>
+        <version.org.apache.maven.plugins.jar>3.2.2</version.org.apache.maven.plugins.jar>
         <version.com.fasterxml.jackson>2.13.3</version.com.fasterxml.jackson>
         <version.org.keycloak>18.0.0</version.org.keycloak>
     </properties>
@@ -68,6 +72,27 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>${version.org.apache.maven.plugins.install}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${version.org.apache.maven.plugins.source}</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${version.org.apache.maven.plugins.jar}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${version.org.apache.maven.plugins.dependency_}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${version.org.apache.maven.plugins.compiler}</version>
                 <configuration>
@@ -109,7 +134,6 @@
                 <executions>
                     <execution>
                         <id>prepare-test-cluster</id>
-                        <phase>pre-integration-test</phase>
                         <goals>
                             <goal>create</goal>
                             <goal>start</goal>

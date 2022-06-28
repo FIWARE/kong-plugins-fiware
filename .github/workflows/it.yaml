@@ -90,6 +90,4 @@ jobs:
       - name: Execute test
         run: |
           cd it/
-          mvn test-compile
-          ls
           mvn integration-test
