@@ -88,11 +88,13 @@ jobs:
           echo "USER kong" >> Dockerfile
           cat Dockerfile
 
-      - name: Build and push
+      - name: Build image
         run: |
-          docker build --build-arg KONG_BASE="kong:${{ env.KONG_VERSION }}-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir"  --output type=tar,dest=it/kong.tar .
+          docker build --build-arg KONG_BASE="kong:${{ env.KONG_VERSION }}-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir"  --output type=tar,dest=kong.tar .
+          cp kong.tar it/kong.tar
 
       - name: Execute test
         run: |
           cd it/
+          ls
           mvn clean install integration-test
