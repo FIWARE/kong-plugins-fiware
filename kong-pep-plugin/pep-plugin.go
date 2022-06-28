@@ -41,15 +41,18 @@ var authorizationHttpClient httpClient = &http.Client{}
 
 func main() {
 	pepPluginPriorityEnv := os.Getenv("PEP_PLUGIN_PRIORITY")
-	priority := DefaultPriority
 	if pepPluginPriorityEnv != "" {
 		log.Infof("Set priority for PEP-Plugin to %s", pepPluginPriorityEnv)
 		priority, err := strconv.Atoi(pepPluginPriorityEnv)
 		if err != nil {
 			log.Fatalf("Invalid PEP-Priority configured: %v. Err: %v", pepPluginPriorityEnv, err)
 		}
+		log.Infof("Starting with configured priority: %v", priority)
+		server.StartServer(New, Version, priority)
+	} else {
+		log.Infof("Starting with default priority: %v", DefaultPriority)
+		server.StartServer(New, Version, DefaultPriority)
 	}
-	server.StartServer(New, Version, priority)
 }
 
 func New() interface{} {
