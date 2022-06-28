@@ -13,6 +13,8 @@
     <inceptionYear>2022</inceptionYear>
 
     <properties>
+        <localImage.path>kong.tar</localImage.path>
+
         <version.org.junit.jupiter>5.8.2</version.org.junit.jupiter>
         <version.io.kokuwa.maven.k3s-plugin>0.5.0</version.io.kokuwa.maven.k3s-plugin>
         <version.org.apache.maven.plugins.compiler>3.10.1</version.org.apache.maven.plugins.compiler>
@@ -116,6 +118,9 @@
                             <goal>rm</goal>
                         </goals>
                         <configuration>
+                            <tarFiles>
+                                <tarFile>${localImage.path}</tarFile>
+                            </tarFiles>
                             <portBindings>
                                 <portBinding>8090:80</portBinding>
                                 <portBinding>9090:9090</portBinding>
