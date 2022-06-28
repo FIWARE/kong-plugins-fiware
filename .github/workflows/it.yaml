@@ -81,7 +81,10 @@ jobs:
 
       - name: Insert go plugins
         run: |
-          echo "\n USER root \ņ COPY ./go-plugins/ /kong/go-plugins/ \n RUN chmod -R 777 /kong/go-plugins/ \n USER kong \n" >> Dockerfile
+          echo "USER root" >> Dockerfile
+          echo "COPY ./go-plugins/ /kong/go-plugins/" >> Dockerfile 
+          echo "RUN chmod -R 777 /kong/go-plugins/" >> Dockerfile
+          echo "USER kong" >> Dockerfile
           cat Dockerfile
 
       - name: Build and push
