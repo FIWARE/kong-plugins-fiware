@@ -27,7 +27,10 @@ jobs:
           go-version: '>=1.17.0'
 
       - run: |
-          go build -o pep-plugin -f ./kong-pep-plugin/pep-plugin.go
+          cd ./kong-pep-plugin
+          go build -o pep-plugin
+          cd ..
+          cp ./kong-pep-plugin/pep-plugin ./pep-plugin
     
       - name: Prepare values
         run: | 
