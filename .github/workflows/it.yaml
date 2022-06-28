@@ -80,19 +80,12 @@ jobs:
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/empty_file
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/packer.lua
 
-      - name: Insert pep plugin
-        run: |
-          cat ./kong-pep-plugin/docker-stage/Dockerfile | cat - Dockerfile > Dockerfile.tmp && mv Dockerfile.tmp Dockerfile
-
-          echo "USER root" >> Dockerfile
-          echo "COPY --from=build-pep-plugin /temp/pep-plugin /kong/go-plugins/" >> Dockerfile 
-          echo "RUN chmod -R 777 /kong/go-plugins/" >> Dockerfile
-          echo "USER kong" >> Dockerfile
-          cat Dockerfile
-
       - name: Build image
         run: |
-          docker build --build-arg KONG_BASE="kong:${{ env.KONG_VERSION }}-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir" . -t fiware/kong:0.0.1
+          # lua image first
+          docker build --build-arg KONG_BASE="kong:${{ env.KONG_VERSION }}-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir" . -t kong-lua
+          # add go-plugin
+          docker build -f docker/Dockerfile . -t fiware/kong:0.0.1
 
       - name: Execute test
         run: |
