@@ -31,9 +31,8 @@ jobs:
       - name: Set version output
         id: out
         run: echo "::set-output name=version::$(echo ${VERSION})"
-
-
-  git-release:
+     
+  build-pep-plugin:
     needs: ["generate-version"]
     runs-on: ubuntu-latest
 
@@ -41,12 +40,38 @@ jobs:
 
       - uses: actions/checkout@v2
 
+      - name: Build pep-plugin 
+        run: |
+          cd ./kong-pep-plugin 
+          docker run -v $(pwd):/temp/ --workdir="/temp" kong/go-plugin-tool:2.0.4-alpine-latest go build -o pep-plugin .
+        
+      - uses: actions/upload-artifact@v2
+        with:
+          name: pep-plugin
+          path: ./kong-pep-plugin/pep-plugin
+
+  git-release:
+    needs: ["generate-version", "build-pep-plugin"]
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: pep-plugin
+          path: ./go-plugins/
+
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ needs.generate-version.outputs.version }}
           title: ${{ needs.generate-version.outputs.version }}
           prerelease: false
+          files: |
+            ./go-plugins/pep-plugin
 
   auth-endpoint-config-ishare:
 

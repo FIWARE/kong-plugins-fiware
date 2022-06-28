@@ -42,21 +42,6 @@ jobs:
           echo "::set-output name=version::$(echo ${VERSION}-PRE-${{ steps.pr_number.outputs.nr }})"
           echo "::set-output name=plain-version::$(echo ${VERSION})"
 
-  git-release:
-    needs: ["generate-version"]
-    runs-on: ubuntu-latest
-
-    steps:
-
-      - uses: actions/checkout@v2
-
-      - uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ needs.generate-version.outputs.version }}
-          prerelease: true
-          title: ${{ needs.generate-version.outputs.version }}
-  
   build-pep-plugin:
     needs: ["generate-version"]
     runs-on: ubuntu-latest
@@ -65,18 +50,40 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-go@v3
-        with:
-          go-version: '>=1.17.0'
-
-      - run: |
-          go build -o pep-plugin ./kong-pep-plugin
-
+      - name: Build pep-plugin 
+        run: |
+          cd ./kong-pep-plugin 
+          docker run -v $(pwd):/temp/ --workdir="/temp" kong/go-plugin-tool:2.0.4-alpine-latest go build -o pep-plugin .
+        
       - uses: actions/upload-artifact@v2
         with:
           name: pep-plugin
-          path: ./pep-plugin
+          path: ./kong-pep-plugin/pep-plugin
       
+
+  git-release:
+    needs: ["generate-version", "build-pep-plugin"]
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: pep-plugin
+          path: ./go-plugins/
+
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ needs.generate-version.outputs.version }}
+          prerelease: true
+          title: ${{ needs.generate-version.outputs.version }}
+          files: |
+            ./go-plugins/pep-plugin
+          
 
   pre-release-kong:
     needs: ["git-release", "generate-version"]
@@ -148,12 +155,13 @@ jobs:
 
       - name: Insert go plugins
         run: |
-          echo "\n USER root \ņ COPY ./go-plugins/ /kong/go-plugins/ \n RUN chmod -R 777 /kong/go-plugins/ \n USER kong \n" >> Dockerfile
-          cat Dockerfile
+          echo "USER root" >> Dockerfile
+          echo "COPY ./go-plugins /kong/go-plugins" >> Dockerfile
+          echo "RUN chmod -R 777 /kong/go-plugins/" >> Dockerfile
+          echo "USER kong" >> Dockerfile
 
       - name: Build and push
         run: |
           docker build --build-arg KONG_BASE="kong:2.8.1-alpine" --build-arg PLUGINS="lua-fiware-lib,kong-plugin-auth-endpoint-config-ishare,kong-plugin-ngsi-ishare-policies" --build-arg ROCKS_DIR="./plugin-dir" --tag quay.io/fiware/kong:${{ needs.generate-version.outputs.version }} .
   
           docker push quay.io/fiware/kong:${{ needs.generate-version.outputs.version }}
-
