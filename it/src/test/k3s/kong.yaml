@@ -110,7 +110,7 @@ spec:
       initContainers:
       - name: clear-stale-pid
         image: fiware/kong:0.0.1
-        imagePullPolicy: Always
+        imagePullPolicy: Never
         securityContext:
         
           {}
@@ -186,7 +186,7 @@ spec:
       containers:
       - name: "proxy"
         image: fiware/kong:0.0.1
-        imagePullPolicy: Always
+        imagePullPolicy: Never
         securityContext:
         
           {}
