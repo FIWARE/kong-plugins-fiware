@@ -30,7 +30,8 @@ jobs:
           cd ./kong-pep-plugin
           go build -o pep-plugin
           cd ..
-          cp ./kong-pep-plugin/pep-plugin ./pep-plugin
+          mkdir ./go-plugins/
+          cp ./kong-pep-plugin/pep-plugin ./go-plugins/pep-plugin
     
       - name: Prepare values
         run: | 

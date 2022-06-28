@@ -1,4 +1,4 @@
-module fiware.org/kong-pep-plugin
+module fiware.org/kong-plugins-fiware/kong-pep-plugin
 
 go 1.17
 
