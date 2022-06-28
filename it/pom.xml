@@ -117,6 +117,7 @@
                             <goal>kubectl</goal>
                         </goals>
                         <configuration>
+                            <streamLogs>true</streamLogs>
                             <dockerImages>
                                 <dockerImage>${kong.image}</dockerImage>
                             </dockerImages>
