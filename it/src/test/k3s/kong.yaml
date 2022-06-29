@@ -21,14 +21,7 @@ data:
   kong.yml: |
     _format_version: "2.1"
     _transform: true
-    consumers:
-      - username: 7c902139-d4d0-461a-bb14-7fa29aa143fe
-    jwt_secrets:
-      - consumer: 7c902139-d4d0-461a-bb14-7fa29aa143fe
-        key: 7c902139-d4d0-461a-bb14-7fa29aa143fe
-        secret: "f7b15672d6414a63"
-
-
+  
     services:
       - host: "orion-ld"
         name: "orion-oidc"
