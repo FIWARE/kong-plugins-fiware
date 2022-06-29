@@ -101,7 +101,7 @@ function NgsiIshareHandler:access(config)
 	 return handle_error(401, "Unrecognizable token")
       end
    end
-   kong.log.debug("Retrieved token: ", req_token)
+   -- kong.log.debug("Retrieved token: ", req_token)
 
    -- Build config object
    local proxy_config = {
