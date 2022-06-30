@@ -7,10 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Kong/go-pdk/request"
 	cache "github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 )
+
+type KeyrockPDP struct{}
 
 type KeyrockRequest struct {
 	method string
@@ -18,11 +19,16 @@ type KeyrockRequest struct {
 	token  string
 }
 
+type KeyrockResponse struct {
+	// we are only interested in that
+	AuthorizationDecision string `json:"authorization_decision"`
+}
+
 var DefaultExpiry int64 = 60
 var keyrockDesicionCache *cache.Cache
 var keyrockCacheEnabled bool = true
 
-func authorizeAtKeyrock(conf Config, request request.Request) (desicion bool) {
+func (KeyrockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool) {
 
 	authzRequest, err := http.NewRequest(http.MethodGet, conf.AuthorizationEndpointAddress, nil)
 	// its false until proven otherwise.
@@ -32,26 +38,9 @@ func authorizeAtKeyrock(conf Config, request request.Request) (desicion bool) {
 		return
 	}
 
-	requestMethod, err := request.GetMethod()
-	if err != nil {
-		log.Errorf("[Keyrock] Was not able to retrieve method from request. Err: %v", err)
-		return
-	}
-	requestPath, err := request.GetPath()
-	if err != nil {
-		log.Errorf("[Keyrock] Was not able to retrieve path from request. Err: %v", err)
-		return
-	}
-	hs, _ := request.GetHeaders(40)
-	log.Errorf("Headers: %v", hs)
-	authHeader, err := request.GetHeader("authorization")
-	if err != nil {
-		log.Errorf("[Keyrock] No auth header was provided. Err: %v", err)
-		return
-	}
-	authHeader = cleanAuthHeader(authHeader)
+	authHeader := cleanAuthHeader(requestInfo.AuthorizationHeader)
 
-	var keyrockRequest KeyrockRequest = KeyrockRequest{method: requestMethod, path: requestPath, token: authHeader}
+	var keyrockRequest KeyrockRequest = KeyrockRequest{method: requestInfo.Method, path: requestInfo.Path, token: authHeader}
 	var cacheKey = fmt.Sprint(keyrockRequest)
 	if keyrockDesicionCache == nil {
 		initKeyrockCache(conf)
@@ -68,8 +57,8 @@ func authorizeAtKeyrock(conf Config, request request.Request) (desicion bool) {
 	}
 
 	query := authzRequest.URL.Query()
-	query.Add("action", requestMethod)
-	query.Add("resource", requestPath)
+	query.Add("action", requestInfo.Method)
+	query.Add("resource", requestInfo.Path)
 	query.Add("access_token", authHeader)
 	query.Add("app-id", conf.KeyrockAppId)
 	authzRequest.URL.RawQuery = query.Encode()
@@ -80,7 +69,7 @@ func authorizeAtKeyrock(conf Config, request request.Request) (desicion bool) {
 		return
 	}
 	if response.StatusCode != 200 {
-		log.Errorf("[Keyrock] Did not receive a successfull response. %v", response)
+		log.Errorf("[Keyrock] Did not receive a successfull response. Status: %v", response.StatusCode)
 		return
 	}
 
@@ -97,7 +86,7 @@ func authorizeAtKeyrock(conf Config, request request.Request) (desicion bool) {
 		}
 		return true
 	} else {
-		log.Infof("[Keyrock] Request was not allowed: %v.", response.Body)
+		log.Infof("[Keyrock] Request was not allowed.")
 		return
 	}
 }
@@ -105,7 +94,6 @@ func authorizeAtKeyrock(conf Config, request request.Request) (desicion bool) {
 func cleanAuthHeader(authHeader string) (cleanedHeader string) {
 	cleanedHeader = strings.ReplaceAll(authHeader, "Bearer ", "")
 	cleanedHeader = strings.ReplaceAll(cleanedHeader, "bearer ", "")
-
 	return cleanedHeader
 }
 

@@ -43,7 +43,7 @@ jobs:
       - name: Build pep-plugin 
         run: |
           cd ./kong-pep-plugin 
-          docker run -v $(pwd):/temp/ --workdir="/temp" kong/go-plugin-tool:2.0.4-alpine-latest go build -o pep-plugin .
+          docker run -v $(pwd):/temp/ --workdir="/temp" kong/go-plugin-tool:2.0.4-alpine-latest go build -ldflags "-X pep-plugin.Version=${{ needs.generate-version.outputs.version }}" -o pep-plugin .
         
       - uses: actions/upload-artifact@v2
         with:
