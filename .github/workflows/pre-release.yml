@@ -133,8 +133,8 @@ jobs:
           cp -r kong-plugin-auth-endpoint-config-ishare/.  plugin-dir/
           cp -r kong-plugin-ngsi-ishare-policies/.  plugin-dir/
           cd plugin-dir/
-          luarocks install lua-fiware-lib 0.0.1-1
-          luarocks pack lua-fiware-lib 0.0.1-1
+          luarocks install lua-fiware-lib
+          luarocks pack lua-fiware-lib
           luarocks install lua-resty-jwt
           luarocks pack lua-resty-jwt
 
