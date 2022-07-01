@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	cache "github.com/patrickmn/go-cache"
@@ -24,15 +23,15 @@ type KeyrockResponse struct {
 	AuthorizationDecision string `json:"authorization_decision"`
 }
 
-var DefaultExpiry int64 = 60
 var keyrockDesicionCache *cache.Cache
 var keyrockCacheEnabled bool = true
 
 func (KeyrockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool) {
 
-	authzRequest, err := http.NewRequest(http.MethodGet, conf.AuthorizationEndpointAddress, nil)
 	// its false until proven otherwise.
 	desicion = false
+
+	authzRequest, err := http.NewRequest(http.MethodGet, conf.AuthorizationEndpointAddress, nil)
 	if err != nil {
 		log.Errorf("[Keyrock] Was not able to create authz request to %s. Err: %v", conf.AuthorizationEndpointAddress, err)
 		return
@@ -89,12 +88,6 @@ func (KeyrockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool
 		log.Infof("[Keyrock] Request was not allowed.")
 		return
 	}
-}
-
-func cleanAuthHeader(authHeader string) (cleanedHeader string) {
-	cleanedHeader = strings.ReplaceAll(authHeader, "Bearer ", "")
-	cleanedHeader = strings.ReplaceAll(cleanedHeader, "bearer ", "")
-	return cleanedHeader
 }
 
 func initKeyrockCache(config Config) {

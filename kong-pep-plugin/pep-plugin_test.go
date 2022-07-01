@@ -18,16 +18,22 @@ func (mPDP mockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bo
 }
 
 type mockKong struct {
-	method      string
-	methodError error
-	path        string
-	pathError   error
-	header      string
-	headerError error
+	method       string
+	methodError  error
+	path         string
+	pathError    error
+	header       string
+	headerError  error
+	headers      map[string][]string
+	headersError error
 }
 
 func (mk mockKong) GetHeader(k string) (string, error) {
 	return mk.header, mk.headerError
+}
+
+func (mk mockKong) GetHeaders(max int) (map[string][]string, error) {
+	return mk.headers, mk.headersError
 }
 
 func (mk mockKong) GetPath() (string, error) {
