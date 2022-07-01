@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -112,6 +113,8 @@ func getResourcesFromKeycloak(conf Config, path string, tokenHeader string) (krl
 	// add the auth header
 	resourcesRequest.Header.Add("Authorization", tokenHeader)
 
+	log.Infof("Request: %v", resourcesRequest)
+
 	response, err := authorizationHttpClient.Do(resourcesRequest)
 	if err != nil {
 		log.Errorf("[Keycloak] Was not able to call resources endpoint. Err: %v", err)
@@ -119,7 +122,7 @@ func getResourcesFromKeycloak(conf Config, path string, tokenHeader string) (krl
 	}
 	if response.StatusCode != 200 {
 		log.Errorf("[Keycloak] Did not receive a successfull response. Status: %v", response.StatusCode)
-		return
+		return krl, errors.New("No succesfull response from keycloak.")
 	}
 
 	err = json.NewDecoder(response.Body).Decode(&krl)
