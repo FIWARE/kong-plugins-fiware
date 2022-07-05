@@ -13,8 +13,8 @@ type mockPDP struct {
 	descision bool
 }
 
-func (mPDP mockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool) {
-	return mPDP.descision
+func (mPDP mockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
+	return &mPDP.descision
 }
 
 type mockKong struct {
@@ -106,7 +106,7 @@ func TestHandleRequest(t *testing.T) {
 		responseCode = 0
 		keyrockPDP = mockPDP{descision: tc.pdpDecision}
 
-		handleRequest(tc.mockKong, tc.testConfig)
+		handleRequest(tc.mockKong, &tc.testConfig)
 
 		if responseCode != tc.expectedStatus {
 			t.Errorf("%s: Did not get expected response status. Expected: %v, Actual: %v", tc.testName, tc.expectedStatus, responseCode)

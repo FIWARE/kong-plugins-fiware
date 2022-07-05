@@ -24,23 +24,54 @@ data:
   
     services:
       - host: "orion-ld"
-        name: "orion-oidc"
+        name: "orion-keyrock"
         port: 1026
         protocol: http
 
         routes:
-          - name: orion-oidc
+          - name: orion-keyrock
             paths:
-              - /orion
+              - /orion-keyrock
             strip_path: true
 
         plugins:
           - name: pep-plugin
             config:
+              pathprefix: "/orion-keyrock"
               authorizationendpointtype: Keyrock
               authorizationendpointaddress: http://keyrock:8080/user
               keyrockappid: 7c902139-d4d0-461a-bb14-7fa29aa143fe
 
+          - name: request-transformer
+            config:
+              remove:
+                headers:
+                  - Authorization
+                  - authorization
+      - host: "orion-ld"
+        name: "orion-keycloak"
+        port: 1026
+        protocol: http
+  
+        routes:
+          - name: orion-keycloak
+            paths:
+              - /orion-keycloak
+            strip_path: true
+  
+        plugins:
+          - name: pep-plugin
+            config:
+              pathprefix: "/orion-keycloak"
+              authorizationendpointtype: Keycloak
+              authorizationendpointaddress: http://keycloak:80
+              keycloakrealm: fiware-server
+              keycloakclientid: orion-pep
+              keycloakclientsecret: 978ad148-d99b-406d-83fc-578597290a79
+              keycloackadditionalclaims:
+                "http.fiware-servicepath": "fiware-servicepath"
+                "http:fiware-service": "fiware-service"
+  
           - name: request-transformer
             config:
               remove:

@@ -90,9 +90,9 @@ func TestAuthorize(t *testing.T) {
 
 		// initialize the cache before every test to not interfer with the results
 		keyrockDesicionCache = nil
-		desicion := keyrockPDP.Authorize(tc.testConfig, tc.testRequest)
+		desicion := keyrockPDP.Authorize(&tc.testConfig, &tc.testRequest)
 
-		if desicion != tc.expectedDesicion {
+		if *desicion != tc.expectedDesicion {
 			t.Errorf("%s: Desicion was not as expected. Expected: %v, Actual: %v", tc.testName, tc.expectedDesicion, desicion)
 		}
 	}
@@ -171,14 +171,14 @@ func TestDescisionCaching(t *testing.T) {
 		keyrockDesicionCache = nil
 
 		// first call
-		keyrockPDP.Authorize(tc.testConfig, tc.testRequest)
+		keyrockPDP.Authorize(&tc.testConfig, &tc.testRequest)
 		// second call
-		desicion := keyrockPDP.Authorize(tc.testConfig, tc.testRequest)
+		desicion := keyrockPDP.Authorize(&tc.testConfig, &tc.testRequest)
 
 		if tc.expectCacheHit && requestCounter > 1 {
 			t.Errorf("%s: Request was expected to be served from cache. Counter is: %v", tc.testName, requestCounter)
 		}
-		if desicion != tc.expectedDesicion {
+		if *desicion != tc.expectedDesicion {
 			t.Errorf("%s: Desicion was not as expected. Expected: %v, Actual: %v", tc.testName, tc.expectedDesicion, desicion)
 		}
 
@@ -198,13 +198,13 @@ func TestCacheExpiry(t *testing.T) {
 	testRequest := RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"}
 
 	// first call
-	keyrockPDP.Authorize(testConfig, testRequest)
+	keyrockPDP.Authorize(&testConfig, &testRequest)
 
 	// wait for cache to expire(twice the expiry)
 	time.Sleep(2 * time.Second)
 
 	// second call
-	keyrockPDP.Authorize(testConfig, testRequest)
+	keyrockPDP.Authorize(&testConfig, &testRequest)
 
 	if requestCounter != 2 {
 		t.Errorf("TestCacheExpiry: Cache should have been expired, but counter was: %v", requestCounter)
@@ -223,11 +223,11 @@ func TestCacheDisabled(t *testing.T) {
 	testRequest := RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"}
 
 	// first call
-	keyrockPDP.Authorize(testConfig, testRequest)
+	keyrockPDP.Authorize(&testConfig, &testRequest)
 	// second call
-	keyrockPDP.Authorize(testConfig, testRequest)
+	keyrockPDP.Authorize(&testConfig, &testRequest)
 	// third call
-	keyrockPDP.Authorize(testConfig, testRequest)
+	keyrockPDP.Authorize(&testConfig, &testRequest)
 
 	if requestCounter != 3 {
 		t.Errorf("TestCacheExpiry: Cache should have been disabled, everything should have been served from the cache. Counter was %v.", requestCounter)

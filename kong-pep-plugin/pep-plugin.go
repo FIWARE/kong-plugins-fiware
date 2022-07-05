@@ -32,6 +32,8 @@ type Config struct {
 	KeycloakResourceCacheExpiryInS int64
 	// expiry time for the desicion cache, -1 disables the cache
 	DecisionCacheExpiryInS int64
+	// path prefix used, will be removed before handling
+	PathPrefix string
 }
 
 // represents the neccessary info about a request to be forwarded to PDP
@@ -50,7 +52,7 @@ type httpClient interface {
 
 // PDP interface, needs to be implemented for connection to the concret PDP like Keyrock.
 type PDP interface {
-	Authorize(conf Config, requestInfo RequestInfo) bool
+	Authorize(conf *Config, requestInfo *RequestInfo) *bool
 }
 
 // inteface to kong for better testability
@@ -123,13 +125,15 @@ func New() interface{} {
 
 func (conf Config) Access(kong *pdk.PDK) {
 	// hand over to the interface
-	handleRequest(Kong{pdk: kong}, conf)
+	handleRequest(Kong{pdk: kong}, &conf)
 }
 
-func handleRequest(kong KongI, conf Config) {
-	var desicion = false
+func handleRequest(kong KongI, conf *Config) {
 
-	requestInfo, err := parseKongRequest(kong)
+	// false until proven otherwise.
+	desicion := getNegativeDesicion()
+
+	requestInfo, err := parseKongRequest(kong, &conf.PathPrefix)
 	if err != nil {
 		log.Errorf("Was not able to parse the request. Err: %v", err)
 		kong.Exit(400, "Request rejected due to unparsable request.")
@@ -137,19 +141,19 @@ func handleRequest(kong KongI, conf Config) {
 	}
 
 	if conf.AuthorizationEndpointType == "Keyrock" {
-		desicion = keyrockPDP.Authorize(conf, requestInfo)
+		desicion = keyrockPDP.Authorize(conf, &requestInfo)
 	} else if conf.AuthorizationEndpointType == "Keycloak" {
-		desicion = keycloakPDP.Authorize(conf, requestInfo)
+		desicion = keycloakPDP.Authorize(conf, &requestInfo)
 	}
 
-	if !desicion {
+	if !*desicion {
 		log.Infof("Request was not allowed.")
 		kong.Exit(403, fmt.Sprintf("Request forbidden by authorization service %s.", conf.AuthorizationEndpointType))
 	}
 	log.Debugf("Request was allowed.")
 }
 
-func parseKongRequest(kong KongI) (requestInfo RequestInfo, err error) {
+func parseKongRequest(kong KongI, pathPrefix *string) (requestInfo RequestInfo, err error) {
 	requestMethod, err := kong.GetMethod()
 	if err != nil {
 		log.Errorf("Was not able to retrieve method from request. Err: %v", err)
@@ -161,6 +165,7 @@ func parseKongRequest(kong KongI) (requestInfo RequestInfo, err error) {
 		log.Errorf("Was not able to retrieve path from request. Err: %v", err)
 		return requestInfo, err
 	}
+	requestPath = stripPrefix(*pathPrefix, requestPath)
 
 	authHeader, err := kong.GetHeader("authorization")
 	if err != nil {
@@ -177,8 +182,22 @@ func parseKongRequest(kong KongI) (requestInfo RequestInfo, err error) {
 	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers}, err
 }
 
+func stripPrefix(pathPrefix string, requestPath string) (strippedPath string) {
+	return strings.Replace(requestPath, pathPrefix, "", 1)
+}
+
 func cleanAuthHeader(authHeader string) (cleanedHeader string) {
 	cleanedHeader = strings.ReplaceAll(authHeader, "Bearer ", "")
 	cleanedHeader = strings.ReplaceAll(cleanedHeader, "bearer ", "")
 	return cleanedHeader
+}
+
+func getPositveDesicion() *bool {
+	b := true
+	return &b
+}
+
+func getNegativeDesicion() *bool {
+	b := false
+	return &b
 }

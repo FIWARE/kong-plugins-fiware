@@ -26,10 +26,10 @@ type KeyrockResponse struct {
 var keyrockDesicionCache *cache.Cache
 var keyrockCacheEnabled bool = true
 
-func (KeyrockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool) {
+func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
 
-	// its false until proven otherwise.
-	desicion = false
+	// false until proven otherwise.
+	desicion = getNegativeDesicion()
 
 	authzRequest, err := http.NewRequest(http.MethodGet, conf.AuthorizationEndpointAddress, nil)
 	if err != nil {
@@ -52,7 +52,7 @@ func (KeyrockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool
 	if exists {
 		log.Infof("[Keyrock] Found cached desicion.")
 		// we only cache success, thus dont care about the cache value
-		return true
+		return getPositveDesicion()
 	}
 
 	query := authzRequest.URL.Query()
@@ -83,14 +83,14 @@ func (KeyrockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool
 		if keyrockCacheEnabled {
 			keyrockDesicionCache.Add(cacheKey, true, cache.DefaultExpiration)
 		}
-		return true
+		return getPositveDesicion()
 	} else {
 		log.Infof("[Keyrock] Request was not allowed.")
 		return
 	}
 }
 
-func initKeyrockCache(config Config) {
+func initKeyrockCache(config *Config) {
 	var expiry = config.DecisionCacheExpiryInS
 	if expiry == -1 {
 		log.Infof("[Keyrock] Decision caching is disabled.")

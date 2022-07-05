@@ -1,15 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/base64"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
+	"github.com/Nerzal/gocloak/v11"
 	cache "github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 )
@@ -27,10 +25,6 @@ type KeycloackDesicionResponse struct {
 	Result bool `json:"result"`
 }
 
-type KeycloackResourcesList struct {
-	Resources []KeycloackResources
-}
-
 type KeycloackResources struct {
 	// all fields that we dont need are ignored.
 	Name string `json:"name"`
@@ -44,9 +38,13 @@ var keycloakDesicionCache *cache.Cache
 var keycloakResourcesCacheEnabled bool = true
 var keycloakResourcesCache *cache.Cache
 
-func (KeycloakPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool) {
-	// its false until proven otherwise.
-	desicion = false
+var keycloakClient gocloak.GoCloak
+
+func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
+
+	log.Infof("+++++++++++++++++++++++++++++++Start keycloak auth")
+	// false until proven otherwise.
+	desicion = getNegativeDesicion()
 
 	// build directly, so that it can serve as part of the cache-key
 	claimToken := buildClaimToken(conf, requestInfo)
@@ -64,142 +62,119 @@ func (KeycloakPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion boo
 	if exists {
 		log.Infof("[Keycloak] Found cached desicion.")
 		// we only cache success, thus dont care about the cache value
-		return true
+		return getPositveDesicion()
 	}
 
-	krl, err := getResourcesFromKeycloak(conf, requestInfo.Path, requestInfo.AuthorizationHeader)
+	keycloakClient = gocloak.NewClient(conf.AuthorizationEndpointAddress, gocloak.SetAuthAdminRealms("admin/realms"), gocloak.SetAuthRealms("realms"))
+	token, err := getServiceAccountToken(conf)
+	if err != nil {
+		log.Errorf("[Keycloak] Could not get resources. Err: %v", err)
+	}
+
+	krl, err := getResourcesFromKeycloak(conf, requestInfo.Path, requestInfo.AuthorizationHeader, &token)
 	if err != nil {
 		log.Errorf("[Keycloak] Failed to get resources. Err: %v", err)
 		return
 	}
-	desicion, err = checkPermission(conf, requestInfo, krl, claimToken)
+
+	desicion, err = checkPermission(conf, requestInfo, krl, &claimToken)
 	if err != nil {
 		log.Errorf("[Keycloak] Failed to check permissions")
 		return
 	}
-	if desicion && keyrockCacheEnabled {
+	if *desicion && keyrockCacheEnabled {
 		keycloakDesicionCache.Add(cacheKey, true, cache.DefaultExpiration)
 	}
 	return
 }
 
-func getResourcesFromKeycloak(conf Config, path string, tokenHeader string) (krl KeycloackResourcesList, err error) {
+func getServiceAccountToken(conf *Config) (tokenString string, err error) {
+	ctx := context.Background()
+	token, err := keycloakClient.LoginClient(ctx, conf.KeycloakClientID, conf.KeycloakClientSecret, conf.KeycloakRealm)
+	if err != nil {
+		log.Errorf("[Keycloak] Was not able to get a token. Err: %v", err)
+		return
+	}
+
+	return token.AccessToken, err
+}
+
+func getResourcesFromKeycloak(conf *Config, path string, tokenHeader string, serviceAccountToken *string) (resourceRepresentation []*gocloak.ResourceRepresentation, err error) {
 
 	if keycloakResourcesCache == nil {
 		initKeycloackResourcesCache(conf)
 	}
 	if keycloakResourcesCacheEnabled {
-		krl, exists := keycloakResourcesCache.Get(path)
+		resourceRepresentation, exists := keycloakResourcesCache.Get(path)
 		if exists {
-			return krl.(KeycloackResourcesList), err
+			return resourceRepresentation.([]*gocloak.ResourceRepresentation), err
 		}
 	}
+	matchingUri := true
+	max := -1
+	params := gocloak.GetResourceParams{URI: &path, Max: &max, MatchingURI: &matchingUri}
 
-	resourcesRequest, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/realms/%s/authz/protection/resource_set", conf.AuthorizationEndpointAddress, conf.KeycloakRealm), nil)
-	if err != nil {
-		log.Errorf("[Keycloak] Was not able to create resources-request to %s. Err: %v", conf.AuthorizationEndpointAddress, err)
-		return
-	}
+	resourceRepresentation, err = keycloakClient.GetResourcesClient(
+		context.Background(),
+		*serviceAccountToken,
+		conf.KeycloakRealm,
+		params,
+	)
 
-	// create the query for matching resources
-	query := resourcesRequest.URL.Query()
-	query.Add("matchingUri", "true")
-	query.Add("deep", "true")
-	query.Add("max", "-1")
-	query.Add("exactName", "false")
-	query.Add("uri", path)
-	resourcesRequest.URL.RawQuery = query.Encode()
-
-	// add the auth header
-	resourcesRequest.Header.Add("Authorization", tokenHeader)
-
-	log.Infof("Request: %v", resourcesRequest)
-
-	response, err := authorizationHttpClient.Do(resourcesRequest)
 	if err != nil {
 		log.Errorf("[Keycloak] Was not able to call resources endpoint. Err: %v", err)
 		return
 	}
-	if response.StatusCode != 200 {
-		log.Errorf("[Keycloak] Did not receive a successfull response. Status: %v", response.StatusCode)
-		return krl, errors.New("No succesfull response from keycloak.")
-	}
 
-	err = json.NewDecoder(response.Body).Decode(&krl)
-	if err != nil {
-		log.Errorf("[Keycloak] Resources Response body was not valid. Err: %v", err)
-		return
-	}
-	log.Debugf("[Keycloak] Received resources: %v", krl)
+	log.Debugf("[Keycloak] Received resources diff: %v", resourceRepresentation)
 	if keycloakResourcesCacheEnabled {
-		keycloakResourcesCache.Add(path, krl, cache.DefaultExpiration)
+		keycloakResourcesCache.Add(path, resourceRepresentation, cache.DefaultExpiration)
 	}
 	return
 }
 
-func checkPermission(conf Config, requestInfo RequestInfo, krl KeycloackResourcesList, claimToken string) (desicion bool, err error) {
-	// its false until proven otherwise.
-	desicion = false
+func checkPermission(conf *Config, requestInfo *RequestInfo, kl []*gocloak.ResourceRepresentation, claimToken *string) (desicion *bool, err error) {
 
-	// create the form data
-	form := url.Values{}
-	form.Add("grant_type", "urn:ietf:params:oauth:grant-type:uma-ticket")
-	form.Add("audience", conf.KeycloakClientID)
-	form.Add("claim_token", claimToken)
-	form.Add("permission", buildPermissionsParameter(krl))
-	form.Add("subject_token", cleanAuthHeader(requestInfo.AuthorizationHeader))
-	// we are only interested in the result, not the details
-	form.Add("response_mode", "decision")
+	desicion = getNegativeDesicion()
 
-	tokenRequest, err := http.NewRequest(
-		http.MethodGet,
-		fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", conf.AuthorizationEndpointAddress, conf.KeycloakRealm),
-		strings.NewReader(form.Encode()))
+	grant_type := "urn:ietf:params:oauth:grant-type:uma-ticket"
+	claim_token_format := "urn:ietf:params:oauth:token-type:jwt"
+	permissions := buildPermissionsParameter(kl)
+	subject_token := cleanAuthHeader(requestInfo.AuthorizationHeader)
+	requestParams := &gocloak.RequestingPartyTokenOptions{
+		GrantType:        &grant_type,
+		Audience:         &conf.KeycloakClientID,
+		ClaimToken:       claimToken,
+		ClaimTokenFormat: &claim_token_format,
+		Permissions:      permissions,
+	}
+
+	keycloakDesicion, err := keycloakClient.GetRequestingPartyPermissionDecision(context.Background(), subject_token, conf.KeycloakRealm, *requestParams)
+
 	if err != nil {
-		log.Errorf("[Keycloak] Was not able to create token-request to %s. Err: %v", conf.AuthorizationEndpointAddress, err)
+		log.Errorf("[Keycloak] Was not able to get desicion. Err: %v", err)
 		return
 	}
 
-	basicAuthHeaderToken := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", conf.KeycloakClientID, conf.KeycloakClientSecret)))
-	tokenRequest.Header.Add("Authorization", fmt.Sprintf("Basic: %s", basicAuthHeaderToken))
-
-	response, err := authorizationHttpClient.Do(tokenRequest)
-	if err != nil {
-		log.Errorf("[Keycloak] Was not able to call token endpoint. Err: %v", err)
-		return
-	}
-	if response.StatusCode != 200 {
-		log.Errorf("[Keycloak] Did not receive a successfull response. Status: %v", response.StatusCode)
-		return
-	}
-
-	var desicionResponse KeycloackDesicionResponse
-
-	err = json.NewDecoder(response.Body).Decode(&desicionResponse)
-	if err != nil {
-		log.Errorf("[Keycloak] Did not receive a valid response. Err: %v", err)
-		return
-	}
-
-	if !desicionResponse.Result {
-		log.Infof("[Keycloak] Request was not allowed by keycloak.")
-		return
-	}
 	log.Debugf("[Keycloak] Request was allowed by keycloak.")
-	return true, err
+	return keycloakDesicion.Result, err
 }
 
-func buildPermissionsParameter(krl KeycloackResourcesList) string {
+func buildPermissionsParameter(kl []*gocloak.ResourceRepresentation) *[]string {
+
+	log.Infof("Resources: %v", kl)
 	resourceIds := []string{}
-	for _, resource := range krl.Resources {
-		resourceIds = append(resourceIds, resource.Id)
+	for _, resource := range kl {
+		log.Infof("Individual one %v", resource)
+		resourceIds = append(resourceIds, *resource.ID)
 	}
-	permissionsString := strings.Join(resourceIds, ", ")
-	log.Debugf("[Keycloak] Request permissions: %s", permissionsString)
-	return permissionsString
+	log.Infof("[Keycloak] Request permissions: %v", resourceIds)
+	return &resourceIds
 }
 
-func buildClaimToken(conf Config, requestInfo RequestInfo) string {
+func buildClaimToken(conf *Config, requestInfo *RequestInfo) string {
+
+	log.Infof("+++++++++++++++++++++++++++++++Claim token")
 	manadatoryClaims := []string{fmt.Sprintf("\"http.method\":[\"%s\"]", requestInfo.Method), fmt.Sprintf("\"http.uri\":[\"%s\"]", requestInfo.Path)}
 	optionalClaims := []string{}
 	for claim, header := range conf.KeycloackAdditionalClaims {
@@ -209,11 +184,11 @@ func buildClaimToken(conf Config, requestInfo RequestInfo) string {
 	allClaims := append(manadatoryClaims, optionalClaims...)
 	allClaimsString := strings.Join(allClaims, ",")
 	unencodedClaims := fmt.Sprintf("{ %s }", allClaimsString)
-	log.Debugf("[Keycloak] All claims: %s", unencodedClaims)
+	log.Infof("[Keycloak] All claims: %s", unencodedClaims)
 	return base64.StdEncoding.EncodeToString([]byte(unencodedClaims))
 }
 
-func initKeycloackResourcesCache(config Config) {
+func initKeycloackResourcesCache(config *Config) {
 	var expiry = config.KeycloakResourceCacheExpiryInS
 	if expiry == -1 {
 		log.Infof("[Keycloak] Resource caching is disabled.")
@@ -227,7 +202,7 @@ func initKeycloackResourcesCache(config Config) {
 	keycloakResourcesCache = cache.New(time.Duration(expiry)*time.Second, time.Duration(2*expiry)*time.Second)
 }
 
-func initKeycloakDesicionCache(config Config) {
+func initKeycloakDesicionCache(config *Config) {
 	var expiry = config.DecisionCacheExpiryInS
 	if expiry == -1 {
 		log.Infof("[Keycloak] Decision caching is disabled.")
