@@ -29,7 +29,7 @@ jobs:
       - name: Build pep-plugin 
         run: |
           cd ./kong-pep-plugin 
-          docker run -v $(pwd):/temp/ --workdir="/temp" golang:1.18.3-alpine 'go mod tidy && GOOS=linux GOARCH=amd64 go build -ldflags "-X pep-plugin.Version=${{ needs.generate-version.outputs.version }}" -o pep-plugin .'
+          go mod tidy && GOOS=linux GOARCH=amd64 go build -ldflags "-X pep-plugin.Version=${{ needs.generate-version.outputs.version }}" -o pep-plugin .
           cd ..
           mkdir ./go-plugins/
           cp ./kong-pep-plugin/pep-plugin ./go-plugins/pep-plugin
