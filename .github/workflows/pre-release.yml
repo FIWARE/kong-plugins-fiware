@@ -53,7 +53,7 @@ jobs:
       - name: Build pep-plugin 
         run: |
           cd ./kong-pep-plugin 
-          go mod tidy && GOOS=linux GOARCH=amd64 go build -ldflags "-X pep-plugin.Version=${{ needs.generate-version.outputs.version }}" -o pep-plugin .
+          go mod tidy && GOOS=linux GOARCH=amd64 go build -ldflags "-X pep-plugin.Version=0.0.1" -o pep-plugin .
         
       - uses: actions/upload-artifact@v2
         with:
