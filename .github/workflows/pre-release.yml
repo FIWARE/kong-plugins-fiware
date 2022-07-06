@@ -53,11 +53,11 @@ jobs:
       - name: Build pep-plugin 
         run: |
           cd ./kong-pep-plugin 
-          docker run -v $(pwd):/temp/ --workdir="/temp" golang:1.18.3-buster go mod tidy && GOOS=linux GOARCH=amd64 go build -ldflags "-X pep-plugin.Version=${{ needs.generate-version.outputs.version }}" -o pep-plugin .        
+          docker run -v $(pwd):/temp/ --workdir="/temp" golang:1.18.3-buster go mod tidy && GOOS=linux GOARCH=amd64 go build -ldflags "-X pep-plugin.Version=${{ needs.generate-version.outputs.version }}" .        
       - uses: actions/upload-artifact@v2
         with:
           name: pep-plugin
-          path: ./kong-pep-plugin/pep-plugin
+          path: ./kong-pep-plugin/kong-pep-plugin
       
 
   git-release:
@@ -81,7 +81,7 @@ jobs:
           prerelease: true
           title: ${{ needs.generate-version.outputs.version }}
           files: |
-            ./go-plugins/pep-plugin
+            ./go-plugins/kong-pep-plugin
           
 
   pre-release-kong:
