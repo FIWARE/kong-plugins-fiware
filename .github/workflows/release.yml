@@ -137,7 +137,7 @@ jobs:
 
   kong: 
 
-    needs: ["git-release", "generate-version", "ngsi-ishare-policies", "auth-endpoint-config-ishare"]
+    needs: ["git-release", "generate-version", "ngsi-ishare-policies", "auth-endpoint-config-ishare", "build-pep-plugin"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -157,6 +157,19 @@ jobs:
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/Dockerfile
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/empty_file
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/packer.lua
+
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: pep-plugin
+          path: ./go-plugins/
+
+      - name: Insert go plugins
+        run: |
+          echo "USER root" >> Dockerfile
+          echo "COPY ./go-plugins /go-plugins" >> Dockerfile
+          echo "RUN chmod -R 777 /go-plugins/" >> Dockerfile
+          echo "USER kong" >> Dockerfile
 
       - name: Build and push
         run: |
