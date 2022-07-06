@@ -187,9 +187,9 @@ spec:
             - name: KONG_PLUGINSERVER_NAMES
               value: "pep-plugin"
             - name: KONG_PLUGINSERVER_PEP_PLUGIN_QUERY_CMD
-              value: "/kong/go-plugins/pep-plugin -dump"
+              value: "/go-plugins/pep-plugin -dump"
             - name: KONG_PLUGINSERVER_PEP_PLUGIN_START_CMD
-              value: "/kong/go-plugins/pep-plugin"
+              value: "/go-plugins/pep-plugin"
             - name: KONG_PORTAL_API_ACCESS_LOG
               value: "/dev/stdout"
             - name: KONG_PORTAL_API_ERROR_LOG
@@ -254,9 +254,9 @@ spec:
             - name: KONG_PLUGINSERVER_NAMES
               value: "pep-plugin"
             - name: KONG_PLUGINSERVER_PEP_PLUGIN_QUERY_CMD
-              value: "/kong/go-plugins/pep-plugin -dump"
+              value: "/go-plugins/pep-plugin -dump"
             - name: KONG_PLUGINSERVER_PEP_PLUGIN_START_CMD
-              value: "/kong/go-plugins/pep-plugin"
+              value: "/go-plugins/pep-plugin"
             - name: KONG_PORTAL_API_ACCESS_LOG
               value: "/dev/stdout"
             - name: KONG_PORTAL_API_ERROR_LOG
