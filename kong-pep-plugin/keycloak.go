@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Nerzal/gocloak/v11"
+	cache "github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,8 +32,14 @@ type KeycloackResources struct {
 	Id   string `json:"_id"`
 }
 
+var keycloakCacheEnabled bool = true
+var keycloakDesicionCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
+
+var keycloakResourcesCacheEnabled bool = true
+var keycloakResourcesCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
+
 var keycloakClient gocloak.GoCloak
-var expiry int
+var expiry int64
 
 func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
 
@@ -45,7 +52,6 @@ func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *
 	var keycloackRequest KeycloackRequest = KeycloackRequest{method: requestInfo.Method, path: requestInfo.Path, token: requestInfo.AuthorizationHeader, claims: claimToken}
 	var cacheKey = fmt.Sprint(keycloackRequest)
 
-	log.Infof("[Keycloak] Initialize the desicion cache.")
 	initKeycloakDesicionCache(conf)
 	var exists bool = false
 	if keycloakCacheEnabled {
@@ -53,7 +59,7 @@ func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *
 	}
 
 	if exists {
-		log.Infof("[Keycloak] Found cached desicion.")
+		log.Debugf("[Keycloak] Found cached desicion.")
 		// we only cache success, thus dont care about the cache value
 		return getPositveDesicion()
 	}
@@ -94,10 +100,8 @@ func getServiceAccountToken(conf *Config) (tokenString string, err error) {
 
 func getResourcesFromKeycloak(conf *Config, path string, tokenHeader string, serviceAccountToken *string) (resourceRepresentation []*gocloak.ResourceRepresentation, err error) {
 
-	if keycloakResourcesCache == nil {
-		log.Infof("[Keycloak] Initialize the resources cache.")
-		initKeycloackResourcesCache(conf)
-	}
+	initKeycloackResourcesCache(conf)
+
 	if keycloakResourcesCacheEnabled {
 		resourceRepresentation, exists := keycloakResourcesCache.Get(path)
 		if exists {
@@ -160,7 +164,7 @@ func buildPermissionsParameter(kl []*gocloak.ResourceRepresentation) *[]string {
 	for _, resource := range kl {
 		resourceIds = append(resourceIds, *resource.ID)
 	}
-	log.Infof("[Keycloak] Request permissions: %v", resourceIds)
+	log.Debugf("[Keycloak] Request permissions: %v", resourceIds)
 	return &resourceIds
 }
 
@@ -175,14 +179,16 @@ func buildClaimToken(conf *Config, requestInfo *RequestInfo) string {
 	allClaims := append(manadatoryClaims, optionalClaims...)
 	allClaimsString := strings.Join(allClaims, ",")
 	unencodedClaims := fmt.Sprintf("{ %s }", allClaimsString)
-	log.Infof("[Keycloak] All claims: %s", unencodedClaims)
+
+	log.Debugf("[Keycloak] All claims: %s", unencodedClaims)
+
 	return base64.StdEncoding.EncodeToString([]byte(unencodedClaims))
 }
 
 func initKeycloackResourcesCache(config *Config) {
-	var expiry = config.DecisionCacheExpiryInS
+	expiry = config.DecisionCacheExpiryInS
 	if expiry == -1 {
-		log.Infof("[Keycloak] Resource caching is disabled.")
+		log.Debugf("[Keycloak] Resource caching is disabled.")
 		keycloakResourcesCacheEnabled = false
 		return
 	}
@@ -192,9 +198,9 @@ func initKeycloackResourcesCache(config *Config) {
 }
 
 func initKeycloakDesicionCache(config *Config) {
-	var expiry = config.DecisionCacheExpiryInS
+	expiry = config.DecisionCacheExpiryInS
 	if expiry == -1 {
-		log.Infof("[Keycloak] Decision caching is disabled.")
+		log.Debugf("[Keycloak] Decision caching is disabled.")
 		keycloakCacheEnabled = false
 		return
 	}

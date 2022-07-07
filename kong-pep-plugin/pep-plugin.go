@@ -6,11 +6,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
-	cache "github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -103,12 +101,6 @@ var DefaultExpiry int64 = 60
 var authorizationHttpClient httpClient = &http.Client{}
 var keyrockPDP PDP = &KeyrockPDP{}
 var keycloakPDP PDP = &KeycloakPDP{}
-
-var keycloakCacheEnabled bool = true
-var keycloakDesicionCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
-
-var keycloakResourcesCacheEnabled bool = true
-var keycloakResourcesCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
 
 func main() {
 
