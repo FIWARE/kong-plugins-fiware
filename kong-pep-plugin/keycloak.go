@@ -5,9 +5,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Nerzal/gocloak/v11"
-	cache "github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -76,7 +76,7 @@ func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *
 		return
 	}
 	if *desicion && keyrockCacheEnabled {
-		keycloakDesicionCache.Add(cacheKey, true, expiry)
+		keycloakDesicionCache.Add(cacheKey, true, time.Duration(expiry)*time.Second)
 	}
 	return
 }
@@ -122,7 +122,7 @@ func getResourcesFromKeycloak(conf *Config, path string, tokenHeader string, ser
 
 	log.Debugf("[Keycloak] Received resources diff: %v", resourceRepresentation)
 	if keycloakResourcesCacheEnabled {
-		keycloakResourcesCache.Add(path, resourceRepresentation, cache.DefaultExpiration)
+		keycloakResourcesCache.Add(path, resourceRepresentation, time.Duration(expiry)*time.Second)
 	}
 	return
 }
