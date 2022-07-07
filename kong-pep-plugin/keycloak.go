@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/Nerzal/gocloak/v11"
 	cache "github.com/patrickmn/go-cache"
@@ -32,13 +31,8 @@ type KeycloackResources struct {
 	Id   string `json:"_id"`
 }
 
-var keycloakCacheEnabled bool = true
-var keycloakDesicionCache *cache.Cache
-
-var keycloakResourcesCacheEnabled bool = true
-var keycloakResourcesCache *cache.Cache
-
 var keycloakClient gocloak.GoCloak
+var expiry int
 
 func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
 
@@ -50,10 +44,9 @@ func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *
 
 	var keycloackRequest KeycloackRequest = KeycloackRequest{method: requestInfo.Method, path: requestInfo.Path, token: requestInfo.AuthorizationHeader, claims: claimToken}
 	var cacheKey = fmt.Sprint(keycloackRequest)
-	if keyrockDesicionCache == nil {
-		log.Infof("[Keycloak] Initialize the desicion cache.")
-		initKeycloakDesicionCache(conf)
-	}
+
+	log.Infof("[Keycloak] Initialize the desicion cache.")
+	initKeycloakDesicionCache(conf)
 	var exists bool = false
 	if keycloakCacheEnabled {
 		_, exists = keycloakDesicionCache.Get(cacheKey)
@@ -83,7 +76,7 @@ func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *
 		return
 	}
 	if *desicion && keyrockCacheEnabled {
-		keycloakDesicionCache.Add(cacheKey, true, cache.DefaultExpiration)
+		keycloakDesicionCache.Add(cacheKey, true, expiry)
 	}
 	return
 }
@@ -187,17 +180,15 @@ func buildClaimToken(conf *Config, requestInfo *RequestInfo) string {
 }
 
 func initKeycloackResourcesCache(config *Config) {
-	var expiry = config.KeycloakResourceCacheExpiryInS
+	var expiry = config.DecisionCacheExpiryInS
 	if expiry == -1 {
 		log.Infof("[Keycloak] Resource caching is disabled.")
 		keycloakResourcesCacheEnabled = false
 		return
 	}
 	if expiry == 0 {
-		log.Infof("[Keycloak] Use default expiry of %vs.", DefaultExpiry)
 		expiry = DefaultExpiry
 	}
-	keycloakResourcesCache = cache.New(time.Duration(expiry)*time.Second, time.Duration(2*expiry)*time.Second)
 }
 
 func initKeycloakDesicionCache(config *Config) {
@@ -208,8 +199,6 @@ func initKeycloakDesicionCache(config *Config) {
 		return
 	}
 	if expiry == 0 {
-		log.Infof("[Keycloak] Use default expiry of %vs.", DefaultExpiry)
 		expiry = DefaultExpiry
 	}
-	keycloakDesicionCache = cache.New(time.Duration(expiry)*time.Second, time.Duration(2*expiry)*time.Second)
 }
