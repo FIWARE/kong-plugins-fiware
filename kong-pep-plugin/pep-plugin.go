@@ -124,6 +124,7 @@ func New() interface{} {
 }
 
 func (conf Config) Access(kong *pdk.PDK) {
+
 	// hand over to the interface
 	handleRequest(Kong{pdk: kong}, &conf)
 }
@@ -132,6 +133,13 @@ func handleRequest(kong KongI, conf *Config) {
 
 	// false until proven otherwise.
 	desicion := getNegativeDesicion()
+
+	defer func() {
+		if err := recover(); err != nil {
+			log.Errorf("Panic occured: Err: %v", err)
+			kong.Exit(403, "Request forbidden due to internal errors")
+		}
+	}()
 
 	requestInfo, err := parseKongRequest(kong, &conf.PathPrefix)
 	if err != nil {
