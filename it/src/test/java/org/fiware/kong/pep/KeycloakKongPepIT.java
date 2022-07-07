@@ -16,7 +16,7 @@ public class KeycloakKongPepIT {
 
 
 	private static final String KONG_ADDRESS = "http://localhost:8070";
-	private static final String KEYCLOAK_ADDRESS = "https://keycloak-feature-add-kong.apps.fiware-dev-aws.fiware.dev";
+	private static final String KEYCLOAK_ADDRESS = "https://localhost:8090";
 	private static final String ORION_PATH = "/orion-keycloak";
 	private static final String ADMIN_USER = "admin-user";
 	private static final String ADMIN_PASSWORD = "admin-user";
