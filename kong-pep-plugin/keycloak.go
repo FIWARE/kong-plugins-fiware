@@ -42,7 +42,6 @@ var keycloakClient gocloak.GoCloak
 
 func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
 
-	log.Infof("+++++++++++++++++++++++++++++++Start keycloak auth")
 	// false until proven otherwise.
 	desicion = getNegativeDesicion()
 
@@ -52,6 +51,7 @@ func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *
 	var keycloackRequest KeycloackRequest = KeycloackRequest{method: requestInfo.Method, path: requestInfo.Path, token: requestInfo.AuthorizationHeader, claims: claimToken}
 	var cacheKey = fmt.Sprint(keycloackRequest)
 	if keyrockDesicionCache == nil {
+		log.Infof("[Keycloak] Initialize the desicion cache.")
 		initKeycloakDesicionCache(conf)
 	}
 	var exists bool = false
@@ -102,6 +102,7 @@ func getServiceAccountToken(conf *Config) (tokenString string, err error) {
 func getResourcesFromKeycloak(conf *Config, path string, tokenHeader string, serviceAccountToken *string) (resourceRepresentation []*gocloak.ResourceRepresentation, err error) {
 
 	if keycloakResourcesCache == nil {
+		log.Infof("[Keycloak] Initialize the resources cache.")
 		initKeycloackResourcesCache(conf)
 	}
 	if keycloakResourcesCacheEnabled {
@@ -162,10 +163,8 @@ func checkPermission(conf *Config, requestInfo *RequestInfo, kl []*gocloak.Resou
 
 func buildPermissionsParameter(kl []*gocloak.ResourceRepresentation) *[]string {
 
-	log.Infof("Resources: %v", kl)
 	resourceIds := []string{}
 	for _, resource := range kl {
-		log.Infof("Individual one %v", resource)
 		resourceIds = append(resourceIds, *resource.ID)
 	}
 	log.Infof("[Keycloak] Request permissions: %v", resourceIds)
@@ -174,7 +173,6 @@ func buildPermissionsParameter(kl []*gocloak.ResourceRepresentation) *[]string {
 
 func buildClaimToken(conf *Config, requestInfo *RequestInfo) string {
 
-	log.Infof("+++++++++++++++++++++++++++++++Claim token")
 	manadatoryClaims := []string{fmt.Sprintf("\"http.method\":[\"%s\"]", requestInfo.Method), fmt.Sprintf("\"http.uri\":[\"%s\"]", requestInfo.Path)}
 	optionalClaims := []string{}
 	for claim, header := range conf.KeycloackAdditionalClaims {
