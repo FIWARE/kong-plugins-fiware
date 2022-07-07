@@ -77,7 +77,7 @@ spec:
       containers:
         - name: keyrock
           imagePullPolicy: Always
-          image: "fiware/idm:8.0.0"
+          image: "fiware/idm:i4trust-rc7-header-size"
           ports:
             - name: http
               containerPort: 8080
