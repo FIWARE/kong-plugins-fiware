@@ -414,6 +414,21 @@ data:
           "groups": [
             "/airquality-data/airquality-data-producer"
           ]
+        },
+        {
+          "username": "not-allowed-user",
+          "enabled": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "not-allowed-user"
+            }
+          ],
+          "clientRoles": {
+            "account": [
+              "view-profile"
+            ]
+          }
         }
       ],
       "clients": [

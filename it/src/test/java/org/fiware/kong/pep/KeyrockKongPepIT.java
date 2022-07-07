@@ -34,7 +34,7 @@ public class KeyrockKongPepIT {
 
 	private static final String KONG_ADDRESS = "http://localhost:8070";
 	private static final String KEYROCK_ADDRESS = "http://localhost:8080";
-	private static final String ORION_PATH = "/orion";
+	private static final String ORION_PATH = "/orion-keyrock";
 	private static final String ADMIN_EMAIL = "admin@fiware.org";
 	private static final String ADMIN_PASSWORD = "admin";
 

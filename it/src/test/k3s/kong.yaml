@@ -48,6 +48,7 @@ data:
                 headers:
                   - Authorization
                   - authorization
+    
       - host: "orion-ld"
         name: "orion-keycloak"
         port: 1026
