@@ -16,7 +16,7 @@ public class KeycloakKongPepIT {
 
 
 	private static final String KONG_ADDRESS = "http://localhost:8070";
-	private static final String KEYCLOAK_ADDRESS = "https://localhost:8090";
+	private static final String KEYCLOAK_ADDRESS = "http://localhost:8090";
 	private static final String ORION_PATH = "/orion-keycloak";
 	private static final String ADMIN_USER = "admin-user";
 	private static final String ADMIN_PASSWORD = "admin-user";
@@ -71,6 +71,8 @@ public class KeycloakKongPepIT {
 				.uri(URI.create(String.format("%s%s/v2/entities", KONG_ADDRESS, ORION_PATH)))
 				.version(HttpClient.Version.HTTP_1_1)
 				.header("Authorization", getAdminToken())
+				.header("fiware-service", "")
+				.header("fiware-servicepath", "/")
 				.build(), HttpResponse.BodyHandlers.ofString());
 		assertEquals(200, response.statusCode(), "Requests with a valid token should be allowed.");
 	}

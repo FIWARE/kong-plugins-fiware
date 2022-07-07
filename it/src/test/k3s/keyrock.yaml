@@ -1,21 +1,3 @@
----
-# Source: keyrock/charts/keyrock/templates/secret.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: keyrock
-  labels:
-    
-    app.kubernetes.io/name: keyrock
-    helm.sh/chart: keyrock-0.4.4
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/version: "8.1.0"
-    app.kubernetes.io/managed-by: Helm
-type: Opaque
-data:
-  dbPassword: cGFzc3dvcmQ=
-  adminPassword: YWRtaW4=
----
 # Source: keyrock/charts/keyrock/templates/service.yaml
 apiVersion: v1
 kind: Service
@@ -106,19 +88,13 @@ spec:
             - name: IDM_DB_HOST
               value: "mysql"
             - name: IDM_DB_PASS
-              valueFrom:
-                 secretKeyRef:
-                   name: keyrock
-                   key: dbPassword
+              value: "password"
             - name: IDM_DB_USER
               value: "root"
             - name: IDM_ADMIN_USER
               value: "admin"
             - name: IDM_ADMIN_PASS
-              valueFrom:
-                secretKeyRef:
-                  name: keyrock
-                  key: adminPassword
+              value: "admin"
             - name: IDM_ADMIN_EMAIL
               value: "admin@fiware.org"
             #will be handled by the ingress
