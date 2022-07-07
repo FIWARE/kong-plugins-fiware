@@ -29,7 +29,7 @@ jobs:
       - name: Build pep-plugin 
         run: |
           cd ./kong-pep-plugin 
-          docker run -v $(pwd):/temp/ --workdir="/temp" golang:1.18.3 go mod tidy && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-X pep-plugin.Version=0.0.1 -extldflags -static" -o pep-plugin .       
+          docker run -v $(pwd):/temp/ --workdir="/temp" golang:1.18.3 go mod tidy && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-extldflags -static" -o pep-plugin .       
           cd ..
           mkdir ./go-plugins/
           cp ./kong-pep-plugin/pep-plugin ./go-plugins/pep-plugin
@@ -85,8 +85,8 @@ jobs:
       - name: Add plugins
         run: | 
           echo "USER root" >> Dockerfile
-          echo "COPY ./go-plugins /kong/go-plugins" >> Dockerfile
-          echo "RUN chmod -R 777 /kong/go-plugins/" >> Dockerfile
+          echo "COPY ./go-plugins /go-plugins" >> Dockerfile
+          echo "RUN chmod -R 777 /go-plugins/" >> Dockerfile
           echo "USER kong" >> Dockerfile
 
       - name: Build image
