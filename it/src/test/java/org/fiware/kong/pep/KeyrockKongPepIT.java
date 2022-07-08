@@ -105,7 +105,7 @@ public class KeyrockKongPepIT {
 		keyrockPermission.action = "GET";
 		keyrockPermission.name = "Test";
 		keyrockPermission.isRegex = true;
-		keyrockPermission.resource = "/orion-keyrock/*";
+		keyrockPermission.resource = "/*";
 		permissionContainer.permission = keyrockPermission;
 
 		HttpResponse<String> permissionCreateResponse = HttpClient.newHttpClient().send(
