@@ -1,5 +1,7 @@
 package org.fiware.kong.pep;
 
+import org.awaitility.Awaitility;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -9,6 +11,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -23,6 +27,18 @@ public class KeycloakKongPepIT {
 	private static final String NOT_ALLOWED_USER = "not-allowed-user";
 	private static final String NOT_ALLOWED_PASSWORD = "not-allowed-user";
 	private static final String REALM= "fiware-server";
+
+	@BeforeAll
+	public static void waitForKeycloak() throws Exception {
+		Awaitility.await().atMost(Duration.of(2, ChronoUnit.MINUTES))
+				.until(() -> {
+						return HttpClient.newHttpClient()
+								.send(HttpRequest.newBuilder()
+										.GET()
+										.uri(URI.create(KEYCLOAK_ADDRESS))
+										.build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
+				});
+	}
 
 	@DisplayName("Kong should reject calls without a bearer-token to a secured path.")
 	@Test

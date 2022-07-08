@@ -2,6 +2,7 @@ package org.fiware.kong.pep;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.awaitility.Awaitility;
 import org.fiware.kong.pep.model.ApplicationContainerObject;
 import org.fiware.kong.pep.model.BearerToken;
 import org.fiware.kong.pep.model.KeyrockApplication;
@@ -10,6 +11,7 @@ import org.fiware.kong.pep.model.KeyrockPermission;
 import org.fiware.kong.pep.model.PermissionContainer;
 import org.fiware.kong.pep.model.RoleContainer;
 import org.fiware.kong.pep.model.UserList;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +21,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +41,18 @@ public class KeyrockKongPepIT {
 	private static final String ORION_PATH = "/orion-keyrock";
 	private static final String ADMIN_EMAIL = "admin@fiware.org";
 	private static final String ADMIN_PASSWORD = "admin";
+
+	@BeforeAll
+	public static void waitForKeyrock() throws Exception {
+		Awaitility.await().atMost(Duration.of(2, ChronoUnit.MINUTES))
+				.until(() -> {
+					return HttpClient.newHttpClient()
+							.send(HttpRequest.newBuilder()
+									.GET()
+									.uri(URI.create(KEYROCK_ADDRESS))
+									.build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
+				});
+	}
 
 
 	@DisplayName("Kong should reject calls without a bearer-token to a secured path.")
