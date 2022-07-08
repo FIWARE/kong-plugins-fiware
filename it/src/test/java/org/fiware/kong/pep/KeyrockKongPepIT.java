@@ -52,6 +52,9 @@ public class KeyrockKongPepIT {
 									.uri(URI.create(KEYROCK_ADDRESS))
 									.build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
 				});
+
+		//wait for the config to be present
+		Thread.sleep(60000);
 	}
 
 

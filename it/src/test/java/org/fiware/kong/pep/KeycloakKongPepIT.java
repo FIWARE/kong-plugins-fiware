@@ -38,6 +38,8 @@ public class KeycloakKongPepIT {
 										.uri(URI.create(KEYCLOAK_ADDRESS))
 										.build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
 				});
+		//wait for the config to be present
+		Thread.sleep(60000);
 	}
 
 	@DisplayName("Kong should reject calls without a bearer-token to a secured path.")
