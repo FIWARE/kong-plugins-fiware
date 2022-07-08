@@ -147,8 +147,8 @@ spec:
       automountServiceAccountToken: true
       initContainers:
         - name: clear-stale-pid
-          image: quay.io/fiware/kong:0.3.0-PRE-11
-          imagePullPolicy: Always
+          image: fiware/kong:0.0.1
+          imagePullPolicy: Never
           command:
             - "rm"
             - "-vrf"
@@ -219,8 +219,8 @@ spec:
               mountPath: /kong_dbless/
       containers:
         - name: "proxy"
-          image: quay.io/fiware/kong:0.3.0-PRE-11
-          imagePullPolicy: Always
+          image: fiware/kong:0.0.1
+          imagePullPolicy: Never
           env:
             - name: KONG_ADMIN_ACCESS_LOG
               value: /dev/stdout
