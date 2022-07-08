@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -13,6 +14,39 @@ import (
 )
 
 type KeycloakPDP struct{}
+
+// shadow interface for the GoCloak-client to enable better testability
+type KeycloackClientI interface {
+	LoginClient(ctx context.Context, clientID, clientSecret, realm string) (*gocloak.JWT, error)
+	GetResourcesClient(ctx context.Context, token, realm string, params gocloak.GetResourceParams) ([]*gocloak.ResourceRepresentation, error)
+	GetRequestingPartyPermissionDecision(ctx context.Context, token, realm string, options gocloak.RequestingPartyTokenOptions) (*gocloak.RequestingPartyPermissionDecision, error)
+}
+
+type KeycloakClient struct {
+	goCloakClient gocloak.GoCloak
+}
+
+func (kc KeycloakClient) LoginClient(ctx context.Context, clientID, clientSecret, realm string) (*gocloak.JWT, error) {
+	return kc.goCloakClient.LoginClient(ctx, clientID, clientSecret, realm)
+}
+
+func (kc KeycloakClient) GetResourcesClient(ctx context.Context, token, realm string, params gocloak.GetResourceParams) ([]*gocloak.ResourceRepresentation, error) {
+	return kc.goCloakClient.GetResourcesClient(ctx, token, realm, params)
+}
+
+func (kc KeycloakClient) GetRequestingPartyPermissionDecision(ctx context.Context, token, realm string, options gocloak.RequestingPartyTokenOptions) (*gocloak.RequestingPartyPermissionDecision, error) {
+	return kc.goCloakClient.GetRequestingPartyPermissionDecision(ctx, token, realm, options)
+}
+
+type KeycloakClientFactoryI interface {
+	NewKeycloakClient(conf *Config) KeycloackClientI
+}
+
+type KeycloackClientFactory struct{}
+
+func (kf KeycloackClientFactory) NewKeycloakClient(conf *Config) KeycloackClientI {
+	return &KeycloakClient{gocloak.NewClient(conf.AuthorizationEndpointAddress, gocloak.SetAuthAdminRealms("admin/realms"), gocloak.SetAuthRealms("realms"))}
+}
 
 type KeycloackRequest struct {
 	method string
@@ -38,7 +72,8 @@ var keycloakDesicionCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*
 var keycloakResourcesCacheEnabled bool = true
 var keycloakResourcesCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
 
-var keycloakClient gocloak.GoCloak
+var keycloakClientFactory KeycloakClientFactoryI = &KeycloackClientFactory{}
+var keycloakClient KeycloackClientI
 var expiry int64
 
 func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
@@ -47,7 +82,12 @@ func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *
 	desicion = getNegativeDesicion()
 
 	// build directly, so that it can serve as part of the cache-key
-	claimToken := buildClaimToken(conf, requestInfo)
+	claimToken, err := buildClaimToken(conf, requestInfo)
+
+	if err != nil {
+		log.Errorf("[Keycloak] Was not able to build claim token. Err: %v", err)
+		return
+	}
 
 	var keycloackRequest KeycloackRequest = KeycloackRequest{method: requestInfo.Method, path: requestInfo.Path, token: requestInfo.AuthorizationHeader, claims: claimToken}
 	var cacheKey = fmt.Sprint(keycloackRequest)
@@ -64,10 +104,11 @@ func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *
 		return getPositveDesicion()
 	}
 
-	keycloakClient = gocloak.NewClient(conf.AuthorizationEndpointAddress, gocloak.SetAuthAdminRealms("admin/realms"), gocloak.SetAuthRealms("realms"))
+	keycloakClient = keycloakClientFactory.NewKeycloakClient(conf)
 	token, err := getServiceAccountToken(conf)
 	if err != nil {
 		log.Errorf("[Keycloak] Could not get resources. Err: %v", err)
+		return
 	}
 
 	krl, err := getResourcesFromKeycloak(conf, requestInfo.Path, requestInfo.AuthorizationHeader, &token)
@@ -88,6 +129,11 @@ func (KeycloakPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *
 }
 
 func getServiceAccountToken(conf *Config) (tokenString string, err error) {
+	if conf.KeycloakClientID == "" || conf.KeycloakClientSecret == "" || conf.KeycloakRealm == "" {
+		log.Errorf("[Keycloak] No proper config provided. Conf: %v", conf)
+		return tokenString, errors.New("no proper keycloak config")
+	}
+
 	ctx := context.Background()
 	token, err := keycloakClient.LoginClient(ctx, conf.KeycloakClientID, conf.KeycloakClientSecret, conf.KeycloakRealm)
 	if err != nil {
@@ -137,7 +183,11 @@ func checkPermission(conf *Config, requestInfo *RequestInfo, kl []*gocloak.Resou
 
 	grant_type := "urn:ietf:params:oauth:grant-type:uma-ticket"
 	claim_token_format := "urn:ietf:params:oauth:token-type:jwt"
-	permissions := buildPermissionsParameter(kl)
+	permissions, err := buildPermissionsParameter(kl)
+	if err != nil {
+		log.Errorf("[Keycloak] Wasnt able to build the permission parameter. Err: %v", err)
+		return
+	}
 	subject_token := cleanAuthHeader(requestInfo.AuthorizationHeader)
 	requestParams := &gocloak.RequestingPartyTokenOptions{
 		GrantType:        &grant_type,
@@ -158,21 +208,41 @@ func checkPermission(conf *Config, requestInfo *RequestInfo, kl []*gocloak.Resou
 	return keycloakDesicion.Result, err
 }
 
-func buildPermissionsParameter(kl []*gocloak.ResourceRepresentation) *[]string {
+func buildPermissionsParameter(kl []*gocloak.ResourceRepresentation) (permissions *[]string, err error) {
 
 	resourceIds := []string{}
 	for _, resource := range kl {
+		if resource.ID == nil || *resource.ID == "" {
+			log.Errorf("[Keycloak] Received a resource without an id.")
+			return permissions, errors.New("received resource without an id.")
+		}
 		resourceIds = append(resourceIds, *resource.ID)
 	}
 	log.Debugf("[Keycloak] Request permissions: %v", resourceIds)
-	return &resourceIds
+	return &resourceIds, err
 }
 
-func buildClaimToken(conf *Config, requestInfo *RequestInfo) string {
+func buildClaimToken(conf *Config, requestInfo *RequestInfo) (token string, err error) {
+
+	if requestInfo.Method == "" {
+		log.Errorf("[Keycloak] Did not receive valid request info. Method missing.")
+		return token, errors.New("Did not receive valid request info. Method missing.")
+	}
+
+	if requestInfo.Path == "" {
+		log.Errorf("[Keycloak] Did not receive valid request info. Path missing.")
+		return token, errors.New("did not receive valid request info. path missing")
+	}
 
 	manadatoryClaims := []string{fmt.Sprintf("\"http.method\":[\"%s\"]", requestInfo.Method), fmt.Sprintf("\"http.uri\":[\"%s\"]", requestInfo.Path)}
 	optionalClaims := []string{}
+
 	for claim, header := range conf.KeycloackAdditionalClaims {
+		headerValues := requestInfo.Headers[header]
+		if headerValues == nil {
+			log.Errorf("[Keycloak] Header %s for additional claim %s is not present.", header, claim)
+			return token, errors.New("expected header is not present")
+		}
 		headerValue := requestInfo.Headers[header][0]
 		optionalClaims = append(optionalClaims, fmt.Sprintf("\"%s\": [\"%s\"]", claim, headerValue))
 	}
@@ -182,7 +252,8 @@ func buildClaimToken(conf *Config, requestInfo *RequestInfo) string {
 
 	log.Debugf("[Keycloak] All claims: %s", unencodedClaims)
 
-	return base64.StdEncoding.EncodeToString([]byte(unencodedClaims))
+	// jwt uses url encoding, do not change to StdEncoding
+	return base64.URLEncoding.EncodeToString([]byte(unencodedClaims)), err
 }
 
 func initKeycloackResourcesCache(config *Config) {

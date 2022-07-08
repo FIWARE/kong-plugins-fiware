@@ -26,7 +26,7 @@ type Config struct {
 	KeycloakClientID string
 	// secret to be used for accessing keycloak
 	KeycloakClientSecret string
-	// optional claims to be added when accessing keycloak, f.e. fiware-service-path
+	// optional claims to be added when accessing keycloak. key is the claim to be used, value the header to get the claim from
 	KeycloackAdditionalClaims map[string]string
 	// expiry time for keycloaks resource cache
 	KeycloakResourceCacheExpiryInS int64

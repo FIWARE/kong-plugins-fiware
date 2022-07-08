@@ -13,6 +13,12 @@ type mockPDP struct {
 	descision bool
 }
 
+type panicPDP struct{}
+
+func (mPDP panicPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
+	panic("Some disater happend.")
+}
+
 func (mPDP mockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
 	return &mPDP.descision
 }
@@ -46,6 +52,19 @@ func (mk mockKong) GetMethod() (string, error) {
 
 func (mk mockKong) Exit(code int, msg string) {
 	responseCode = code
+}
+
+func TestPanicCatchAll(t *testing.T) {
+
+	log.Info("TestPanicCatchAll +++++++++++++++++")
+	responseCode = 0
+	keyrockPDP = panicPDP{}
+
+	handleRequest(mockKong{method: "GET", path: "/test-path", header: "Bearer myToken"}, &Config{AuthorizationEndpointType: "Keyrock"})
+
+	if responseCode != 403 {
+		t.Errorf("TestPanicCatchAll: Request should be denied on panic. Expected: %v, Actual: %v", 403, responseCode)
+	}
 }
 
 func TestHandleRequest(t *testing.T) {
