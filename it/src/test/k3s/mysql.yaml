@@ -118,4 +118,5 @@ spec:
           mountPath: /var/lib/mysql
       volumes:
       - name: data
-        emptyDir: {}
+        emptyDir:
+          medium: Memory
