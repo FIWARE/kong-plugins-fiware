@@ -24,23 +24,55 @@ data:
   
     services:
       - host: "orion-ld"
-        name: "orion-oidc"
+        name: "orion-keyrock"
         port: 1026
         protocol: http
 
         routes:
-          - name: orion-oidc
+          - name: orion-keyrock
             paths:
-              - /orion
+              - /orion-keyrock
             strip_path: true
 
         plugins:
           - name: pep-plugin
             config:
+              pathprefix: "/orion-keyrock"
               authorizationendpointtype: Keyrock
               authorizationendpointaddress: http://keyrock:8080/user
               keyrockappid: 7c902139-d4d0-461a-bb14-7fa29aa143fe
 
+          - name: request-transformer
+            config:
+              remove:
+                headers:
+                  - Authorization
+                  - authorization
+    
+      - host: "orion-ld"
+        name: "orion-keycloak"
+        port: 1026
+        protocol: http
+  
+        routes:
+          - name: orion-keycloak
+            paths:
+              - /orion-keycloak
+            strip_path: true
+  
+        plugins:
+          - name: pep-plugin
+            config:
+              pathprefix: "/orion-keycloak"
+              authorizationendpointtype: Keycloak
+              authorizationendpointaddress: http://keycloak:80
+              keycloakrealm: fiware-server
+              keycloakclientid: orion-pep
+              keycloakclientsecret: 978ad148-d99b-406d-83fc-578597290a79
+              keycloackadditionalclaims:
+                "http.fiware-servicepath": "fiware-servicepath"
+                "http:fiware-service": "fiware-service"
+  
           - name: request-transformer
             config:
               remove:
@@ -122,60 +154,61 @@ spec:
             - "-vrf"
             - "$KONG_PREFIX/pids"
           env:
-
             - name: KONG_ADMIN_ACCESS_LOG
-              value: "/dev/stdout"
+              value: /dev/stdout
             - name: KONG_ADMIN_ERROR_LOG
-              value: "/dev/stderr"
+              value: /dev/stderr
             - name: KONG_ADMIN_GUI_ACCESS_LOG
-              value: "/dev/stdout"
+              value: /dev/stdout
             - name: KONG_ADMIN_GUI_ERROR_LOG
-              value: "/dev/stderr"
+              value: /dev/stderr
             - name: KONG_ADMIN_LISTEN
-              value: "127.0.0.1:8444 http2 ssl"
+              value: 127.0.0.1:8444 http2 ssl
             - name: KONG_CLUSTER_LISTEN
               value: "off"
             - name: KONG_DATABASE
               value: "off"
             - name: KONG_DECLARATIVE_CONFIG
-              value: "/kong_dbless/kong.yml"
+              value: /kong_dbless/kong.yml
             - name: KONG_LOG_LEVEL
-              value: "debug"
+              value: debug
             - name: KONG_LUA_PACKAGE_PATH
-              value: "/opt/?.lua;/opt/?/init.lua;;"
+              value: /opt/?.lua;/opt/?/init.lua;;
             - name: KONG_NGINX_PROXY_HTTP2_MAX_FIELD_SIZE
-              value: "32k"
+              value: 32k
             - name: KONG_NGINX_PROXY_HTTP2_MAX_HEADER_SIZE
-              value: "32k"
+              value: 32k
             - name: KONG_NGINX_PROXY_LARGE_CLIENT_HEADER_BUFFERS
-              value: "16 128k"
+              value: 16 128k
             - name: KONG_NGINX_WORKER_PROCESSES
               value: "2"
             - name: KONG_PLUGINS
-              value: "bundled,pep-plugin"
+              value: bundled,pep-plugin
             - name: KONG_PLUGINSERVER_NAMES
-              value: "pep-plugin"
+              value: pep-plugin
             - name: KONG_PLUGINSERVER_PEP_PLUGIN_QUERY_CMD
-              value: "/kong/go-plugins/pep-plugin -dump"
+              value: "/go-plugins/pep-plugin -dump"
             - name: KONG_PLUGINSERVER_PEP_PLUGIN_START_CMD
-              value: "/kong/go-plugins/pep-plugin"
+              value: "/go-plugins/pep-plugin"
             - name: KONG_PORTAL_API_ACCESS_LOG
-              value: "/dev/stdout"
+              value: /dev/stdout
             - name: KONG_PORTAL_API_ERROR_LOG
-              value: "/dev/stderr"
+              value: /dev/stderr
             - name: KONG_PORT_MAPS
-              value: "80:8000"
+              value: 80:8000
             - name: KONG_PREFIX
-              value: "/kong_prefix/"
+              value: /kong_prefix/
             - name: KONG_PROXY_ACCESS_LOG
-              value: "/dev/stdout"
+              value: /dev/stdout
             - name: KONG_PROXY_ERROR_LOG
-              value: "/dev/stderr"
+              value: /dev/stderr
             - name: KONG_PROXY_LISTEN
-              value: "0.0.0.0:8000"
+              value: 0.0.0.0:8000
             - name: KONG_STATUS_LISTEN
-              value: "0.0.0.0:8100"
+              value: 0.0.0.0:8100
             - name: KONG_STREAM_LISTEN
+              value: "off"
+            - name: KONG_NGINX_DAEMON
               value: "off"
           volumeMounts:
             - name: kong-prefix-dir
@@ -189,59 +222,58 @@ spec:
           image: fiware/kong:0.0.1
           imagePullPolicy: Never
           env:
-
             - name: KONG_ADMIN_ACCESS_LOG
-              value: "/dev/stdout"
+              value: /dev/stdout
             - name: KONG_ADMIN_ERROR_LOG
-              value: "/dev/stderr"
+              value: /dev/stderr
             - name: KONG_ADMIN_GUI_ACCESS_LOG
-              value: "/dev/stdout"
+              value: /dev/stdout
             - name: KONG_ADMIN_GUI_ERROR_LOG
-              value: "/dev/stderr"
+              value: /dev/stderr
             - name: KONG_ADMIN_LISTEN
-              value: "127.0.0.1:8444 http2 ssl"
+              value: 127.0.0.1:8444 http2 ssl
             - name: KONG_CLUSTER_LISTEN
               value: "off"
             - name: KONG_DATABASE
               value: "off"
             - name: KONG_DECLARATIVE_CONFIG
-              value: "/kong_dbless/kong.yml"
+              value: /kong_dbless/kong.yml
             - name: KONG_LOG_LEVEL
-              value: "debug"
+              value: debug
             - name: KONG_LUA_PACKAGE_PATH
-              value: "/opt/?.lua;/opt/?/init.lua;;"
+              value: /opt/?.lua;/opt/?/init.lua;;
             - name: KONG_NGINX_PROXY_HTTP2_MAX_FIELD_SIZE
-              value: "32k"
+              value: 32k
             - name: KONG_NGINX_PROXY_HTTP2_MAX_HEADER_SIZE
-              value: "32k"
+              value: 32k
             - name: KONG_NGINX_PROXY_LARGE_CLIENT_HEADER_BUFFERS
-              value: "16 128k"
+              value: 16 128k
             - name: KONG_NGINX_WORKER_PROCESSES
               value: "2"
             - name: KONG_PLUGINS
-              value: "bundled,pep-plugin"
+              value: bundled,pep-plugin
             - name: KONG_PLUGINSERVER_NAMES
-              value: "pep-plugin"
+              value: pep-plugin
             - name: KONG_PLUGINSERVER_PEP_PLUGIN_QUERY_CMD
-              value: "/kong/go-plugins/pep-plugin -dump"
+              value: /go-plugins/pep-plugin -dump
             - name: KONG_PLUGINSERVER_PEP_PLUGIN_START_CMD
-              value: "/kong/go-plugins/pep-plugin"
+              value: /go-plugins/pep-plugin
             - name: KONG_PORTAL_API_ACCESS_LOG
-              value: "/dev/stdout"
+              value: /dev/stdout
             - name: KONG_PORTAL_API_ERROR_LOG
-              value: "/dev/stderr"
+              value: /dev/stderr
             - name: KONG_PORT_MAPS
-              value: "80:8000"
+              value: 80:8000
             - name: KONG_PREFIX
-              value: "/kong_prefix/"
+              value: /kong_prefix/
             - name: KONG_PROXY_ACCESS_LOG
-              value: "/dev/stdout"
+              value: /dev/stdout
             - name: KONG_PROXY_ERROR_LOG
-              value: "/dev/stderr"
+              value: /dev/stderr
             - name: KONG_PROXY_LISTEN
-              value: "0.0.0.0:8000"
+              value: 0.0.0.0:8000
             - name: KONG_STATUS_LISTEN
-              value: "0.0.0.0:8100"
+              value: 0.0.0.0:8100
             - name: KONG_STREAM_LISTEN
               value: "off"
             - name: KONG_NGINX_DAEMON

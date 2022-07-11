@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/Kong/go-pdk"
 	"github.com/Kong/go-pdk/server"
@@ -13,11 +14,26 @@ import (
 
 // declarative config
 type Config struct {
-	AuthorizationEndpointType    string
+	// type of the authorization endpoint, e.g. Keyrock or Keycloak
+	AuthorizationEndpointType string
+	// address of the authorzation endpoint, f.e. http://keyrock.org/users or http://keycloak.org/
 	AuthorizationEndpointAddress string
-	KeyrockAppId                 string
-	KeycloakRealm                string
-	DecisionCacheExpiryInS       int64
+	// app id of the secured app in keyrock
+	KeyrockAppId string
+	// realm to be used in keycloak
+	KeycloakRealm string
+	// string of the secured client in keycloak
+	KeycloakClientID string
+	// secret to be used for accessing keycloak
+	KeycloakClientSecret string
+	// optional claims to be added when accessing keycloak. key is the claim to be used, value the header to get the claim from
+	KeycloackAdditionalClaims map[string]string
+	// expiry time for keycloaks resource cache
+	KeycloakResourceCacheExpiryInS int64
+	// expiry time for the desicion cache, -1 disables the cache
+	DecisionCacheExpiryInS int64
+	// path prefix used, will be removed before handling
+	PathPrefix string
 }
 
 // represents the neccessary info about a request to be forwarded to PDP
@@ -25,6 +41,7 @@ type RequestInfo struct {
 	Method              string
 	Path                string
 	AuthorizationHeader string
+	Headers             map[string][]string
 }
 
 // Interface to the http-client
@@ -35,13 +52,14 @@ type httpClient interface {
 
 // PDP interface, needs to be implemented for connection to the concret PDP like Keyrock.
 type PDP interface {
-	Authorize(conf Config, requestInfo RequestInfo) bool
+	Authorize(conf *Config, requestInfo *RequestInfo) *bool
 }
 
 // inteface to kong for better testability
 type KongI interface {
 	GetPath() (string, error)
 	GetHeader(key string) (string, error)
+	GetHeaders(max_headers int) (map[string][]string, error)
 	GetMethod() (string, error)
 	Exit(code int, msg string)
 }
@@ -56,6 +74,10 @@ func (k Kong) GetPath() (string, error) {
 
 func (k Kong) GetHeader(key string) (string, error) {
 	return k.pdk.Request.GetHeader(key)
+}
+
+func (k Kong) GetHeaders(max_headers int) (map[string][]string, error) {
+	return k.pdk.Request.GetHeaders(max_headers)
 }
 
 func (k Kong) GetMethod() (string, error) {
@@ -73,8 +95,12 @@ var Version string
 // see current order: https://docs.konghq.com/gateway/latest/plugin-development/custom-logic/#plugins-execution-order
 var DefaultPriority = 805
 
+// default expiry for desicion caching
+var DefaultExpiry int64 = 60
+
 var authorizationHttpClient httpClient = &http.Client{}
 var keyrockPDP PDP = &KeyrockPDP{}
+var keycloakPDP PDP = &KeycloakPDP{}
 
 func main() {
 
@@ -98,14 +124,24 @@ func New() interface{} {
 }
 
 func (conf Config) Access(kong *pdk.PDK) {
+
 	// hand over to the interface
-	handleRequest(Kong{pdk: kong}, conf)
+	handleRequest(Kong{pdk: kong}, &conf)
 }
 
-func handleRequest(kong KongI, conf Config) {
-	var desicion = false
+func handleRequest(kong KongI, conf *Config) {
 
-	requestInfo, err := parseKongRequest(kong)
+	// false until proven otherwise.
+	desicion := getNegativeDesicion()
+
+	defer func() {
+		if err := recover(); err != nil {
+			log.Errorf("Panic occured: Err: %v", err)
+			kong.Exit(403, "Request forbidden due to internal errors")
+		}
+	}()
+
+	requestInfo, err := parseKongRequest(kong, &conf.PathPrefix)
 	if err != nil {
 		log.Errorf("Was not able to parse the request. Err: %v", err)
 		kong.Exit(400, "Request rejected due to unparsable request.")
@@ -113,16 +149,19 @@ func handleRequest(kong KongI, conf Config) {
 	}
 
 	if conf.AuthorizationEndpointType == "Keyrock" {
-		desicion = keyrockPDP.Authorize(conf, requestInfo)
+		desicion = keyrockPDP.Authorize(conf, &requestInfo)
+	} else if conf.AuthorizationEndpointType == "Keycloak" {
+		desicion = keycloakPDP.Authorize(conf, &requestInfo)
 	}
-	if !desicion {
+
+	if !*desicion {
 		log.Infof("Request was not allowed.")
 		kong.Exit(403, fmt.Sprintf("Request forbidden by authorization service %s.", conf.AuthorizationEndpointType))
 	}
 	log.Debugf("Request was allowed.")
 }
 
-func parseKongRequest(kong KongI) (requestInfo RequestInfo, err error) {
+func parseKongRequest(kong KongI, pathPrefix *string) (requestInfo RequestInfo, err error) {
 	requestMethod, err := kong.GetMethod()
 	if err != nil {
 		log.Errorf("Was not able to retrieve method from request. Err: %v", err)
@@ -134,12 +173,39 @@ func parseKongRequest(kong KongI) (requestInfo RequestInfo, err error) {
 		log.Errorf("Was not able to retrieve path from request. Err: %v", err)
 		return requestInfo, err
 	}
+	requestPath = stripPrefix(*pathPrefix, requestPath)
 
 	authHeader, err := kong.GetHeader("authorization")
 	if err != nil {
 		log.Errorf("No auth header was provided. Err: %v", err)
 		return requestInfo, err
 	}
+	// we only support up to 20 headers for now.
+	headers, err := kong.GetHeaders(20)
+	if err != nil {
+		log.Errorf("Was not able to retrieve headers. Err: %v", err)
+		return requestInfo, err
+	}
 
-	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader}, err
+	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers}, err
+}
+
+func stripPrefix(pathPrefix string, requestPath string) (strippedPath string) {
+	return strings.Replace(requestPath, pathPrefix, "", 1)
+}
+
+func cleanAuthHeader(authHeader string) (cleanedHeader string) {
+	cleanedHeader = strings.ReplaceAll(authHeader, "Bearer ", "")
+	cleanedHeader = strings.ReplaceAll(cleanedHeader, "bearer ", "")
+	return cleanedHeader
+}
+
+func getPositveDesicion() *bool {
+	b := true
+	return &b
+}
+
+func getNegativeDesicion() *bool {
+	b := false
+	return &b
 }

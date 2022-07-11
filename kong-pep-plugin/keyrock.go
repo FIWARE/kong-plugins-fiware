@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	cache "github.com/patrickmn/go-cache"
@@ -24,15 +23,15 @@ type KeyrockResponse struct {
 	AuthorizationDecision string `json:"authorization_decision"`
 }
 
-var DefaultExpiry int64 = 60
 var keyrockDesicionCache *cache.Cache
 var keyrockCacheEnabled bool = true
 
-func (KeyrockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool) {
+func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
+
+	// false until proven otherwise.
+	desicion = getNegativeDesicion()
 
 	authzRequest, err := http.NewRequest(http.MethodGet, conf.AuthorizationEndpointAddress, nil)
-	// its false until proven otherwise.
-	desicion = false
 	if err != nil {
 		log.Errorf("[Keyrock] Was not able to create authz request to %s. Err: %v", conf.AuthorizationEndpointAddress, err)
 		return
@@ -53,7 +52,7 @@ func (KeyrockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool
 	if exists {
 		log.Infof("[Keyrock] Found cached desicion.")
 		// we only cache success, thus dont care about the cache value
-		return true
+		return getPositveDesicion()
 	}
 
 	query := authzRequest.URL.Query()
@@ -84,20 +83,14 @@ func (KeyrockPDP) Authorize(conf Config, requestInfo RequestInfo) (desicion bool
 		if keyrockCacheEnabled {
 			keyrockDesicionCache.Add(cacheKey, true, cache.DefaultExpiration)
 		}
-		return true
+		return getPositveDesicion()
 	} else {
 		log.Infof("[Keyrock] Request was not allowed.")
 		return
 	}
 }
 
-func cleanAuthHeader(authHeader string) (cleanedHeader string) {
-	cleanedHeader = strings.ReplaceAll(authHeader, "Bearer ", "")
-	cleanedHeader = strings.ReplaceAll(cleanedHeader, "bearer ", "")
-	return cleanedHeader
-}
-
-func initKeyrockCache(config Config) {
+func initKeyrockCache(config *Config) {
 	var expiry = config.DecisionCacheExpiryInS
 	if expiry == -1 {
 		log.Infof("[Keyrock] Decision caching is disabled.")
