@@ -55,7 +55,7 @@ func TestKeycloakAuthorize(t *testing.T) {
 		testConfig         Config
 		testRequest        RequestInfo
 		mockKeycloakClient mockKeycloakClient
-		expectedDesicion   bool
+		expectedDecision   bool
 	}
 
 	tests := []test{
@@ -63,17 +63,17 @@ func TestKeycloakAuthorize(t *testing.T) {
 			testConfig:         Config{AuthorizationEndpointType: "Keycloak", KeycloakRealm: "Test", KeycloakClientID: "Test-Client", KeycloakClientSecret: "Test-Secret"},
 			testRequest:        RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockKeycloakClient: mockKeycloakClient{loginToken: gocloak.JWT{AccessToken: "valid-token"}, resources: []*gocloak.ResourceRepresentation{getResource("test")}, decision: getPositiveDescision()},
-			expectedDesicion:   true,
+			expectedDecision:   true,
 		}, {testName: "Deny requests if keycloak says so.",
 			testConfig:         Config{AuthorizationEndpointType: "Keycloak", KeycloakRealm: "Test", KeycloakClientID: "Test-Client", KeycloakClientSecret: "Test-Secret"},
 			testRequest:        RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockKeycloakClient: mockKeycloakClient{loginToken: gocloak.JWT{AccessToken: "valid-token"}, resources: []*gocloak.ResourceRepresentation{getResource("test")}, decision: getNegativeDescision()},
-			expectedDesicion:   false,
+			expectedDecision:   false,
 		}, {testName: "Deny requests if keycloak throws error.",
 			testConfig:         Config{AuthorizationEndpointType: "Keycloak", KeycloakRealm: "Test", KeycloakClientID: "Test-Client", KeycloakClientSecret: "Test-Secret"},
 			testRequest:        RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockKeycloakClient: mockKeycloakClient{loginToken: gocloak.JWT{AccessToken: "valid-token"}, resources: []*gocloak.ResourceRepresentation{getResource("test")}, decisionError: errors.New("keycloak unavailable")},
-			expectedDesicion:   false,
+			expectedDecision:   false,
 		},
 	}
 
@@ -82,13 +82,13 @@ func TestKeycloakAuthorize(t *testing.T) {
 		keycloakClientFactory = &mockKeycloakFactory{mockClient: tc.mockKeycloakClient}
 
 		// initialize the cache before every test to not interfer with the results
-		keycloakDesicionCache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
+		keycloakDecisionCache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
 		keycloakResourcesCache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
 
-		desicion := keycloakPDP.Authorize(&tc.testConfig, &tc.testRequest)
+		decision := keycloakPDP.Authorize(&tc.testConfig, &tc.testRequest)
 
-		if *desicion != tc.expectedDesicion {
-			t.Errorf("%s: Desicion was not as expected. Expected: %v, Actual: %v", tc.testName, tc.expectedDesicion, desicion)
+		if *decision != tc.expectedDecision {
+			t.Errorf("%s: Decision was not as expected. Expected: %v, Actual: %v", tc.testName, tc.expectedDecision, decision)
 		}
 
 	}
