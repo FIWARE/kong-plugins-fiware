@@ -54,7 +54,7 @@ public class KeyrockKongPepIT {
 				});
 
 		//wait for the config to be present
-		Thread.sleep(60000);
+		Thread.sleep(30000);
 	}
 
 
