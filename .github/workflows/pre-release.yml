@@ -53,8 +53,7 @@ jobs:
       - name: Build pep-plugin 
         run: |
           cd ./kong-pep-plugin 
-          docker run -v $(pwd):/temp/ --workdir="/temp" kong/go-plugin-tool:2.0.4-alpine-latest go build -ldflags "-X pep-plugin.Version=${{ needs.generate-version.outputs.version }}" -o pep-plugin .
-        
+          docker run -v $(pwd):/temp/ --workdir="/temp" golang:1.18.3 go mod tidy && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-X pep-plugin.Version=${{ needs.generate-version.outputs.version }} -extldflags -static" -o pep-plugin .       
       - uses: actions/upload-artifact@v2
         with:
           name: pep-plugin
@@ -156,8 +155,8 @@ jobs:
       - name: Insert go plugins
         run: |
           echo "USER root" >> Dockerfile
-          echo "COPY ./go-plugins /kong/go-plugins" >> Dockerfile
-          echo "RUN chmod -R 777 /kong/go-plugins/" >> Dockerfile
+          echo "COPY ./go-plugins /go-plugins" >> Dockerfile
+          echo "RUN chmod -R 777 /go-plugins/" >> Dockerfile
           echo "USER kong" >> Dockerfile
 
       - name: Build and push

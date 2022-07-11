@@ -49,7 +49,7 @@ In order to provide a functional kong-plugin, the [kong/go-plugin-tool](https://
 Build the plugin via:
 
 ```shell
-  docker run -v $(pwd):/temp/ --workdir="/temp" kong/go-plugin-tool:2.0.4-alpine-latest go build -o pep-plugin .
+  docker run -v $(pwd):/temp/ --workdir="/temp" golang:1.18.3-alpine go mod tidy && GOOS=linux GOARCH=amd64 go build -o pep-plugin .
 ```
 
 ## Decision caching
