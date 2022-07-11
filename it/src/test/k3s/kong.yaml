@@ -1,0 +1,331 @@
+---
+# Source: kong/charts/kong/templates/service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kong
+  namespace: default
+  labels:
+    app.kubernetes.io/name: kong
+    helm.sh/chart: kong-2.8.0
+    app.kubernetes.io/instance: "release-name"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "2.8"
+---
+# Source: kong/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-configmap
+data:
+  kong.yml: |
+    _format_version: "2.1"
+    _transform: true
+  
+    services:
+      - host: "orion-ld"
+        name: "orion-keyrock"
+        port: 1026
+        protocol: http
+
+        routes:
+          - name: orion-keyrock
+            paths:
+              - /orion-keyrock
+            strip_path: true
+
+        plugins:
+          - name: pep-plugin
+            config:
+              pathprefix: "/orion-keyrock"
+              authorizationendpointtype: Keyrock
+              authorizationendpointaddress: http://keyrock:8080/user
+              keyrockappid: 7c902139-d4d0-461a-bb14-7fa29aa143fe
+
+          - name: request-transformer
+            config:
+              remove:
+                headers:
+                  - Authorization
+                  - authorization
+    
+      - host: "orion-ld"
+        name: "orion-keycloak"
+        port: 1026
+        protocol: http
+  
+        routes:
+          - name: orion-keycloak
+            paths:
+              - /orion-keycloak
+            strip_path: true
+  
+        plugins:
+          - name: pep-plugin
+            config:
+              pathprefix: "/orion-keycloak"
+              authorizationendpointtype: Keycloak
+              authorizationendpointaddress: http://keycloak:80
+              keycloakrealm: fiware-server
+              keycloakclientid: orion-pep
+              keycloakclientsecret: 978ad148-d99b-406d-83fc-578597290a79
+              keycloackadditionalclaims:
+                "http.fiware-servicepath": "fiware-servicepath"
+                "http:fiware-service": "fiware-service"
+  
+          - name: request-transformer
+            config:
+              remove:
+                headers:
+                  - Authorization
+                  - authorization
+---
+# Source: kong/charts/kong/templates/service-kong-proxy.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kong-proxy
+  namespace: default
+  labels:
+    app.kubernetes.io/name: kong
+    helm.sh/chart: kong-2.8.0
+    app.kubernetes.io/instance: "release-name"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "2.8"
+    enable-metrics: "true"
+spec:
+  type: LoadBalancer
+  ports:
+    - name: kong-proxy
+      port: 8070
+      targetPort: 8000
+      appProtocol: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: kong
+    app.kubernetes.io/component: app
+    app.kubernetes.io/instance: "release-name"
+---
+# Source: kong/charts/kong/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kong
+  namespace:  default
+  labels:
+    app.kubernetes.io/name: kong
+    helm.sh/chart: kong-2.8.0
+    app.kubernetes.io/instance: "release-name"
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/version: "2.8"
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kong
+      app.kubernetes.io/component: app
+      app.kubernetes.io/instance: "release-name"
+
+  template:
+    metadata:
+      annotations:
+        checksum/dbless.config: aa168335b8cba89ca1458538887fa31a4c5b028556b671ea31cf1b2a9b82ed9a
+        kuma.io/gateway: "enabled"
+        traffic.sidecar.istio.io/includeInboundPorts: ""
+      labels:
+        app.kubernetes.io/name: kong
+        helm.sh/chart: kong-2.8.0
+        app.kubernetes.io/instance: "release-name"
+        app.kubernetes.io/managed-by: "Helm"
+        app.kubernetes.io/version: "2.8"
+        app.kubernetes.io/component: app
+        app: kong
+        version: "2.8"
+    spec:
+      serviceAccountName: kong
+      automountServiceAccountToken: true
+      initContainers:
+        - name: clear-stale-pid
+          image: fiware/kong:0.0.1
+          imagePullPolicy: Never
+          command:
+            - "rm"
+            - "-vrf"
+            - "$KONG_PREFIX/pids"
+          env:
+            - name: KONG_ADMIN_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_ADMIN_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_ADMIN_GUI_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_ADMIN_GUI_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_ADMIN_LISTEN
+              value: 127.0.0.1:8444 http2 ssl
+            - name: KONG_CLUSTER_LISTEN
+              value: "off"
+            - name: KONG_DATABASE
+              value: "off"
+            - name: KONG_DECLARATIVE_CONFIG
+              value: /kong_dbless/kong.yml
+            - name: KONG_LOG_LEVEL
+              value: debug
+            - name: KONG_LUA_PACKAGE_PATH
+              value: /opt/?.lua;/opt/?/init.lua;;
+            - name: KONG_NGINX_PROXY_HTTP2_MAX_FIELD_SIZE
+              value: 32k
+            - name: KONG_NGINX_PROXY_HTTP2_MAX_HEADER_SIZE
+              value: 32k
+            - name: KONG_NGINX_PROXY_LARGE_CLIENT_HEADER_BUFFERS
+              value: 16 128k
+            - name: KONG_NGINX_WORKER_PROCESSES
+              value: "2"
+            - name: KONG_PLUGINS
+              value: bundled,pep-plugin
+            - name: KONG_PLUGINSERVER_NAMES
+              value: pep-plugin
+            - name: KONG_PLUGINSERVER_PEP_PLUGIN_QUERY_CMD
+              value: "/go-plugins/pep-plugin -dump"
+            - name: KONG_PLUGINSERVER_PEP_PLUGIN_START_CMD
+              value: "/go-plugins/pep-plugin"
+            - name: KONG_PORTAL_API_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_PORTAL_API_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_PORT_MAPS
+              value: 80:8000
+            - name: KONG_PREFIX
+              value: /kong_prefix/
+            - name: KONG_PROXY_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_PROXY_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_PROXY_LISTEN
+              value: 0.0.0.0:8000
+            - name: KONG_STATUS_LISTEN
+              value: 0.0.0.0:8100
+            - name: KONG_STREAM_LISTEN
+              value: "off"
+            - name: KONG_NGINX_DAEMON
+              value: "off"
+          volumeMounts:
+            - name: kong-prefix-dir
+              mountPath: /kong_prefix/
+            - name: kong-tmp
+              mountPath: /tmp
+            - name: kong-custom-dbless-config-volume
+              mountPath: /kong_dbless/
+      containers:
+        - name: "proxy"
+          image: fiware/kong:0.0.1
+          imagePullPolicy: Never
+          env:
+            - name: KONG_ADMIN_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_ADMIN_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_ADMIN_GUI_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_ADMIN_GUI_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_ADMIN_LISTEN
+              value: 127.0.0.1:8444 http2 ssl
+            - name: KONG_CLUSTER_LISTEN
+              value: "off"
+            - name: KONG_DATABASE
+              value: "off"
+            - name: KONG_DECLARATIVE_CONFIG
+              value: /kong_dbless/kong.yml
+            - name: KONG_LOG_LEVEL
+              value: debug
+            - name: KONG_LUA_PACKAGE_PATH
+              value: /opt/?.lua;/opt/?/init.lua;;
+            - name: KONG_NGINX_PROXY_HTTP2_MAX_FIELD_SIZE
+              value: 32k
+            - name: KONG_NGINX_PROXY_HTTP2_MAX_HEADER_SIZE
+              value: 32k
+            - name: KONG_NGINX_PROXY_LARGE_CLIENT_HEADER_BUFFERS
+              value: 16 128k
+            - name: KONG_NGINX_WORKER_PROCESSES
+              value: "2"
+            - name: KONG_PLUGINS
+              value: bundled,pep-plugin
+            - name: KONG_PLUGINSERVER_NAMES
+              value: pep-plugin
+            - name: KONG_PLUGINSERVER_PEP_PLUGIN_QUERY_CMD
+              value: /go-plugins/pep-plugin -dump
+            - name: KONG_PLUGINSERVER_PEP_PLUGIN_START_CMD
+              value: /go-plugins/pep-plugin
+            - name: KONG_PORTAL_API_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_PORTAL_API_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_PORT_MAPS
+              value: 80:8000
+            - name: KONG_PREFIX
+              value: /kong_prefix/
+            - name: KONG_PROXY_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_PROXY_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_PROXY_LISTEN
+              value: 0.0.0.0:8000
+            - name: KONG_STATUS_LISTEN
+              value: 0.0.0.0:8100
+            - name: KONG_STREAM_LISTEN
+              value: "off"
+            - name: KONG_NGINX_DAEMON
+              value: "off"
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - kong
+                  - quit
+                  - --wait=15
+          ports:
+            - name: proxy
+              containerPort: 8000
+              protocol: TCP
+            - name: status
+              containerPort: 8100
+              protocol: TCP
+          volumeMounts:
+            - name: kong-prefix-dir
+              mountPath: /kong_prefix/
+            - name: kong-tmp
+              mountPath: /tmp
+            - name: kong-custom-dbless-config-volume
+              mountPath: /kong_dbless/
+
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /status
+              port: status
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /status
+              port: status
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: kong-prefix-dir
+          emptyDir: {}
+        - name: kong-tmp
+          emptyDir: {}
+        - name: kong-custom-dbless-config-volume
+          configMap:
+            name: kong-configmap

@@ -1,0 +1,215 @@
+---
+# Source: orion-ld/charts/orion-ld/templates/service-mongo.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: orion-ld-mongo
+  labels:
+    app.kubernetes.io/name: orion-ld-mongo
+    helm.sh/chart: orion-ld-1.0.2
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 27017
+      targetPort: 27017
+      protocol: TCP
+      name: mongo
+  selector:
+    app.kubernetes.io/name: orion-ld-mongo
+    app.kubernetes.io/instance: release-name
+---
+# Source: orion-ld/charts/orion-ld/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: orion-ld
+  labels:
+    
+    app.kubernetes.io/name: orion-ld
+    helm.sh/chart: orion-ld-1.0.2
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 1026
+      targetPort: 1026
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: orion-ld
+    app.kubernetes.io/instance: release-name
+---
+# Source: orion-ld/charts/orion-ld/templates/deployment-mongo.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orion-ld-mongo
+  labels:
+    app.kubernetes.io/name: orion-ld-mongo
+    helm.sh/chart: orion-ld-1.0.2
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orion-ld-mongo
+      app.kubernetes.io/instance: release-name
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: orion-ld-mongo
+        helm.sh/chart: orion-ld-1.0.2
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/managed-by: Helm
+      
+    spec:
+      containers:
+        - name: mongo-db
+          imagePullPolicy: IfNotPresent
+          image: "quay.io/opencloudio/ibm-mongodb:4.0.24"
+          securityContext:
+            runAsUser: 999
+          ports:
+            - name: mongo
+              containerPort: 27017
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+                - bash
+                - -ec
+                - |
+                  mongo --eval 'db.runCommand("ping").ok' 127.0.0.1:27017/test && echo 0 || echo 1
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - bash
+                - -ec
+                - |
+                  mongo --eval 'db.runCommand("ping").ok' 127.0.0.1:27017/test && echo 0 || echo 1
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: orion-ld/charts/orion-ld/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orion-ld
+  labels:
+    
+    app.kubernetes.io/name: orion-ld
+    helm.sh/chart: orion-ld-1.0.2
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/version: "1.0.1"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orion-ld
+      app.kubernetes.io/instance: release-name
+  template:
+    metadata:
+      labels:
+        
+        app.kubernetes.io/name: orion-ld
+        helm.sh/chart: orion-ld-1.0.2
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/version: "1.0.1"
+        app.kubernetes.io/managed-by: Helm
+      
+    spec: 
+      serviceAccountName: default
+      containers:
+        - name: orion-ld
+          imagePullPolicy: IfNotPresent
+          image: "quay.io/fiware/orion-ld:1.0.1"
+          
+          # special handling for the health check of telefonica/orion
+          
+          ports:
+            - name: http
+              containerPort: 1026
+              protocol: TCP
+          
+          # special handling for the health check of telefonica/orion
+          
+          env:
+            # general
+            - name: ORIONLD_PORT
+              value: "1026"
+            - name: ORIONLD_SOCKET_SERVICE
+              value: "TRUE"
+            - name: ORIONLD_SOCKET_SERVICE_PORT
+              value: "1027"
+            - name: ORIONLD_DISABLE_FILE_LOG
+              value: "TRUE"
+            - name: ORIONLD_CACHED_CONTEXT_DIRECTORY
+              value: /opt/orion/ldcontexts
+
+            # db
+            - name: ORIONLD_MONGO_HOST
+              value: orion-ld-mongo:27017
+            - name: ORIONLD_MONGO_DB
+              value: orion
+            
+
+            # tenancy
+            
+            # metrics
+            
+            
+            - name: ORIONLD_DISABLE_METRICS
+              value: "TRUE"
+            
+            
+            
+            
+            
+
+            # logging
+            - name: ORIONLD_LOG_LEVEL
+              value: WARN
+
+            ##TROE
+            
+            
+            - name: ORIONLD_TROE
+              value: "FALSE"
+            - name: ORIONLD_TROE_USER
+              value: user
+            
+            
+            - name: ORIONLD_TROE_PWD
+              value: password
+            
+            
+            - name: ORIONLD_TROE_HOST
+              value: postgres
+            
+            
+            - name: ORIONLD_TROE_PORT
+              value: "5432"
+            
+            
+          resources:
+            null

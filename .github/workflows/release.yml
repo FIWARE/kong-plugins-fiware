@@ -31,9 +31,8 @@ jobs:
       - name: Set version output
         id: out
         run: echo "::set-output name=version::$(echo ${VERSION})"
-
-
-  git-release:
+     
+  build-pep-plugin:
     needs: ["generate-version"]
     runs-on: ubuntu-latest
 
@@ -41,12 +40,38 @@ jobs:
 
       - uses: actions/checkout@v2
 
+      - name: Build pep-plugin 
+        run: |
+          cd ./kong-pep-plugin 
+          docker run -v $(pwd):/temp/ --workdir="/temp" golang:1.18.3 go mod tidy && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-X pep-plugin.Version=${{ needs.generate-version.outputs.version }} -extldflags -static" -o pep-plugin .       
+        
+      - uses: actions/upload-artifact@v2
+        with:
+          name: pep-plugin
+          path: ./kong-pep-plugin/pep-plugin
+
+  git-release:
+    needs: ["generate-version", "build-pep-plugin"]
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: pep-plugin
+          path: ./go-plugins/
+
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: ${{ needs.generate-version.outputs.version }}
           title: ${{ needs.generate-version.outputs.version }}
           prerelease: false
+          files: |
+            ./go-plugins/pep-plugin
 
   auth-endpoint-config-ishare:
 
@@ -112,7 +137,7 @@ jobs:
 
   kong: 
 
-    needs: ["git-release", "generate-version", "ngsi-ishare-policies", "auth-endpoint-config-ishare"]
+    needs: ["git-release", "generate-version", "ngsi-ishare-policies", "auth-endpoint-config-ishare", "build-pep-plugin"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -132,6 +157,19 @@ jobs:
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/Dockerfile
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/empty_file
           wget https://raw.githubusercontent.com/Kong/docker-kong/master/customize/packer.lua
+
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: pep-plugin
+          path: ./go-plugins/
+
+      - name: Insert go plugins
+        run: |
+          echo "USER root" >> Dockerfile
+          echo "COPY ./go-plugins /go-plugins" >> Dockerfile
+          echo "RUN chmod -R 777 /go-plugins/" >> Dockerfile
+          echo "USER kong" >> Dockerfile
 
       - name: Build and push
         run: |

@@ -58,3 +58,12 @@ KONG_VERSION=2.8.1
 # Run pongo
 PONGO_PLUGIN_SOURCE=./kong-plugin-ngsi-ishare-policies ./pongo/pongo-docker.sh run
 ```
+
+## Integration tests
+
+Some plugins connect kong to external components. In order to assure them working in real environments, an integration-test framework based on [k3s](https://k3s.io/) is provided. The tests are executed using the [k3s-maven-plugin](https://github.com/kokuwaio/k3s-maven-plugin). 
+The tests itself are written using [Junit5](https://junit.org/junit5/docs/current/user-guide/). 
+
+### Usage
+
+The tests use the local docker-image "fiware/kong:0.0.1". If a different one should be used, either provide it with that tag or change it inside the [kong.yaml](./it/src/test/k3s/kong.yaml). The tests can be executed via ```mvn integration-test```. For local development, a k3s-setup can be started with ```mvn k3s:create k3s:start k3s:image k3s:kubectl```. Tear down afterwards is executed via ```mvn k3s:rm```.
