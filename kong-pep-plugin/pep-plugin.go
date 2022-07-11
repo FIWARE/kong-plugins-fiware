@@ -30,7 +30,7 @@ type Config struct {
 	KeycloackAdditionalClaims map[string]string
 	// expiry time for keycloaks resource cache
 	KeycloakResourceCacheExpiryInS int64
-	// expiry time for the desicion cache, -1 disables the cache
+	// expiry time for the decision cache, -1 disables the cache
 	DecisionCacheExpiryInS int64
 	// path prefix used, will be removed before handling
 	PathPrefix string
@@ -50,7 +50,7 @@ type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// PDP interface, needs to be implemented for connection to the concret PDP like Keyrock.
+// PDP interface, needs to be implemented for connection to the concret PDPs like Keyrock or Keycloak.
 type PDP interface {
 	Authorize(conf *Config, requestInfo *RequestInfo) *bool
 }
@@ -64,6 +64,7 @@ type KongI interface {
 	Exit(code int, msg string)
 }
 
+// wrapper struct to abstract away the pointer to the kong pdk. Improves testability
 type Kong struct {
 	pdk *pdk.PDK
 }
@@ -95,13 +96,16 @@ var Version string
 // see current order: https://docs.konghq.com/gateway/latest/plugin-development/custom-logic/#plugins-execution-order
 var DefaultPriority = 805
 
-// default expiry for desicion caching
+// default expiry for decision caching
 var DefaultExpiry int64 = 60
 
-var authorizationHttpClient httpClient = &http.Client{}
+// pdp implementation for keyrock
 var keyrockPDP PDP = &KeyrockPDP{}
+
+// pdp implementation for keycloak
 var keycloakPDP PDP = &KeycloakPDP{}
 
+// entrypoint for the plugin-server in Kong. Reads the priority and version of the plugin and starts the server.
 func main() {
 
 	pepPluginPriorityEnv := os.Getenv("PEP_PLUGIN_PRIORITY")
@@ -123,17 +127,22 @@ func New() interface{} {
 	return &Config{}
 }
 
+// mandatory entry method for request handling in a Kong plugin.
 func (conf Config) Access(kong *pdk.PDK) {
 
 	// hand over to the interface
 	handleRequest(Kong{pdk: kong}, &conf)
 }
 
+// acutal request handler
 func handleRequest(kong KongI, conf *Config) {
 
 	// false until proven otherwise.
-	desicion := getNegativeDesicion()
+	decision := getNegativeDecision()
 
+	// Catch all for fatal runtime errors. The plugin should reject all requests in this case.
+	// ATTENTION: Without that handling, kong will pass through all requests in case of a crashing plugin,
+	// thus creating a security hole without that.
 	defer func() {
 		if err := recover(); err != nil {
 			log.Errorf("Panic occured: Err: %v", err)
@@ -149,18 +158,20 @@ func handleRequest(kong KongI, conf *Config) {
 	}
 
 	if conf.AuthorizationEndpointType == "Keyrock" {
-		desicion = keyrockPDP.Authorize(conf, &requestInfo)
+		decision = keyrockPDP.Authorize(conf, &requestInfo)
 	} else if conf.AuthorizationEndpointType == "Keycloak" {
-		desicion = keycloakPDP.Authorize(conf, &requestInfo)
+		decision = keycloakPDP.Authorize(conf, &requestInfo)
 	}
 
-	if !*desicion {
+	if !*decision {
 		log.Infof("Request was not allowed.")
 		kong.Exit(403, fmt.Sprintf("Request forbidden by authorization service %s.", conf.AuthorizationEndpointType))
 	}
 	log.Debugf("Request was allowed.")
 }
 
+// Parse the request provided through the pdk wrapper and translate it into the internal model
+// strips the pathPrefix from the received path
 func parseKongRequest(kong KongI, pathPrefix *string) (requestInfo RequestInfo, err error) {
 	requestMethod, err := kong.GetMethod()
 	if err != nil {
@@ -190,22 +201,26 @@ func parseKongRequest(kong KongI, pathPrefix *string) (requestInfo RequestInfo, 
 	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers}, err
 }
 
+// remove prefix from the given path-string
 func stripPrefix(pathPrefix string, requestPath string) (strippedPath string) {
 	return strings.Replace(requestPath, pathPrefix, "", 1)
 }
 
+// remove the "bearer" prefix from the received auth header
 func cleanAuthHeader(authHeader string) (cleanedHeader string) {
 	cleanedHeader = strings.ReplaceAll(authHeader, "Bearer ", "")
 	cleanedHeader = strings.ReplaceAll(cleanedHeader, "bearer ", "")
 	return cleanedHeader
 }
 
-func getPositveDesicion() *bool {
+// helper function to get a "true"-pointer
+func getPositveDecision() *bool {
 	b := true
 	return &b
 }
 
-func getNegativeDesicion() *bool {
+// helper function to get a "false"-pointer
+func getNegativeDecision() *bool {
 	b := false
 	return &b
 }
