@@ -36,7 +36,7 @@ func TestKeyrockAuthorize(t *testing.T) {
 		testRequest      RequestInfo
 		mockResponse     *http.Response
 		mockError        error
-		expectedDesicion bool
+		expectedDecision bool
 	}
 
 	tests := []test{
@@ -44,43 +44,43 @@ func TestKeyrockAuthorize(t *testing.T) {
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getPermitResponse(),
-			expectedDesicion: true,
+			expectedDecision: true,
 		},
 		{testName: "Deny requests on keyrock internal error.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getNonOkResponse(500),
-			expectedDesicion: false,
+			expectedDecision: false,
 		},
 		{testName: "Deny requests on keyrock forbidden error.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getNonOkResponse(403),
-			expectedDesicion: false,
+			expectedDecision: false,
 		},
 		{testName: "Deny requests on keyrock deny-response.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getDenyResponse(),
-			expectedDesicion: false,
+			expectedDecision: false,
 		},
 		{testName: "Deny requests on keyrock invalid response.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getNonJsonResponse(),
-			expectedDesicion: false,
+			expectedDecision: false,
 		},
 		{testName: "Deny requests on keyrock invalid response.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getInvalidResponse(),
-			expectedDesicion: false,
+			expectedDecision: false,
 		},
 		{testName: "Deny requests on keyrock request errors.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockError:        errors.New("Something went wrong"),
-			expectedDesicion: false,
+			expectedDecision: false,
 		},
 	}
 
@@ -89,11 +89,11 @@ func TestKeyrockAuthorize(t *testing.T) {
 		authorizationHttpClient = &mockHttpClient{mockDoResponse: tc.mockResponse, mockError: tc.mockError}
 
 		// initialize the cache before every test to not interfer with the results
-		keyrockDesicionCache = nil
-		desicion := keyrockPDP.Authorize(&tc.testConfig, &tc.testRequest)
+		keyrockDecisionCache = nil
+		decision := keyrockPDP.Authorize(&tc.testConfig, &tc.testRequest)
 
-		if *desicion != tc.expectedDesicion {
-			t.Errorf("%s: Desicion was not as expected. Expected: %v, Actual: %v", tc.testName, tc.expectedDesicion, desicion)
+		if *decision != tc.expectedDecision {
+			t.Errorf("%s: Decision was not as expected. Expected: %v, Actual: %v", tc.testName, tc.expectedDecision, decision)
 		}
 	}
 }
@@ -106,7 +106,7 @@ func TestDescisionCaching(t *testing.T) {
 		mockResponse     *http.Response
 		mockError        error
 		expectCacheHit   bool
-		expectedDesicion bool
+		expectedDecision bool
 	}
 
 	tests := []test{
@@ -115,48 +115,48 @@ func TestDescisionCaching(t *testing.T) {
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getPermitResponse(),
 			expectCacheHit:   true,
-			expectedDesicion: true,
+			expectedDecision: true,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock internal error.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getNonOkResponse(500),
-			expectedDesicion: false,
+			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock forbidden error.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getNonOkResponse(403),
-			expectedDesicion: false,
+			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock deny-response.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getDenyResponse(),
-			expectedDesicion: false,
+			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock invalid response.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getNonJsonResponse(),
-			expectedDesicion: false,
+			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock invalid response.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getInvalidResponse(),
-			expectedDesicion: false,
+			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock request errors.",
 			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockError:        errors.New("Something went wrong"),
-			expectedDesicion: false,
+			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 	}
@@ -168,18 +168,18 @@ func TestDescisionCaching(t *testing.T) {
 		authorizationHttpClient = &mockHttpClient{mockDoResponse: tc.mockResponse, mockError: tc.mockError}
 
 		// initialize the cache before every test to not interfer with the results
-		keyrockDesicionCache = nil
+		keyrockDecisionCache = nil
 
 		// first call
 		keyrockPDP.Authorize(&tc.testConfig, &tc.testRequest)
 		// second call
-		desicion := keyrockPDP.Authorize(&tc.testConfig, &tc.testRequest)
+		decision := keyrockPDP.Authorize(&tc.testConfig, &tc.testRequest)
 
 		if tc.expectCacheHit && requestCounter > 1 {
 			t.Errorf("%s: Request was expected to be served from cache. Counter is: %v", tc.testName, requestCounter)
 		}
-		if *desicion != tc.expectedDesicion {
-			t.Errorf("%s: Desicion was not as expected. Expected: %v, Actual: %v", tc.testName, tc.expectedDesicion, desicion)
+		if *decision != tc.expectedDecision {
+			t.Errorf("%s: Decision was not as expected. Expected: %v, Actual: %v", tc.testName, tc.expectedDecision, decision)
 		}
 
 	}
@@ -188,7 +188,7 @@ func TestDescisionCaching(t *testing.T) {
 func TestCacheExpiry(t *testing.T) {
 
 	// initialize the cache before every test to not interfer with the results
-	keyrockDesicionCache = nil
+	keyrockDecisionCache = nil
 	// null the counter
 	requestCounter = 0
 
@@ -213,7 +213,7 @@ func TestCacheExpiry(t *testing.T) {
 
 func TestCacheDisabled(t *testing.T) {
 	// initialize the cache before every test to not interfer with the results
-	keyrockDesicionCache = nil
+	keyrockDecisionCache = nil
 	// null the counter
 	requestCounter = 0
 

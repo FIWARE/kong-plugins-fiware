@@ -15,11 +15,11 @@ type mockPDP struct {
 
 type panicPDP struct{}
 
-func (mPDP panicPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
+func (mPDP panicPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *bool) {
 	panic("Some disater happend.")
 }
 
-func (mPDP mockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (desicion *bool) {
+func (mPDP mockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *bool) {
 	return &mPDP.descision
 }
 
