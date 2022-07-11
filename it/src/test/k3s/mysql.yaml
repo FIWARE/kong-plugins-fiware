@@ -1,19 +1,4 @@
 ---
-# Source: mysql-db/charts/mysql/templates/secrets.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql
-  labels:
-    app.kubernetes.io/name: mysql
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    helm.sh/chart: mysql-1.0.0
-type: Opaque
-data:
-  mysql-root-password: "cGFzc3dvcmQ="
-  mysql-password: "cGFzc3dvcmQ="
----
 # Source: mysql-db/charts/mysql/templates/svc.yaml
 apiVersion: v1
 kind: Service
@@ -74,16 +59,9 @@ spec:
         imagePullPolicy: "IfNotPresent"
         env:
         - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql
-              key: mysql-root-password
+          value: "password"
         - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: mysql
-              key: mysql-password
-              optional: true
+          value: "password"
         - name: MYSQL_USER
           value: ""
         - name: MYSQL_DATABASE
