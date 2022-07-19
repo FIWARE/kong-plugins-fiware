@@ -10,6 +10,9 @@ This repository contains Kong plugins provided by FIWARE. These allow to extend
 the API Gateway Kong by further functionalities required for FIWARE-based 
 environments.
 
+This project is part of [FIWARE](https://www.fiware.org/). For more information check the FIWARE Catalogue entry for the
+[API Management](https://github.com/Fiware/catalogue/tree/master/security).
+
 
 ## FIWARE Kong build
 
