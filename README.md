@@ -4,6 +4,7 @@
 [![License badge](https://img.shields.io/github/license/FIWARE/kong-plugins-fiware.svg)](https://opensource.org/licenses/MIT)
 [![](https://img.shields.io/badge/tag-fiware-orange.svg?logo=stackoverflow)](http://stackoverflow.com/questions/tagged/fiware)
 <br>
+![CI](https://github.com/fiware/kong-plugins-fiware/actions/workflows/test.yml/badge.svg)
 ![Status](https://nexus.lab.fiware.org/static/badges/statuses/incubating.svg)
 
 This repository contains Kong plugins provided by FIWARE. These allow to extend 
