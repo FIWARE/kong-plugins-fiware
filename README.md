@@ -1,5 +1,10 @@
 # FIWARE Kong Plugins
 
+[![](https://nexus.lab.fiware.org/repository/raw/public/badges/chapters/api-management.svg)](https://www.fiware.org/developers/catalogue/)
+[![License badge](https://img.shields.io/github/license/FIWARE/kong-plugins-fiware.svg)](https://opensource.org/licenses/MIT)
+<br>
+![Status](https://nexus.lab.fiware.org/static/badges/statuses/incubating.svg)
+
 This repository contains Kong plugins provided by FIWARE. These allow to extend 
 the API Gateway Kong by further functionalities required for FIWARE-based 
 environments.
