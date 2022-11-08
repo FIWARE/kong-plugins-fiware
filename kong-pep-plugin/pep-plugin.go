@@ -34,13 +34,6 @@ type Config struct {
 	DecisionCacheExpiryInS int64
 	// path prefix used, will be removed before handling
 	PathPrefix string
-	// Configuration to use ext-authz
-	ExtAuthz ExtAuthzConfig
-}
-
-type ExtAuthzConfig struct {
-	PDPHost      string
-	PDPAuthzPath string
 }
 
 // represents the neccessary info about a request to be forwarded to PDP

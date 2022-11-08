@@ -30,25 +30,11 @@ func (ExtAuthzPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *
 	// false until proven otherwise.
 	decision = getNegativeDecision()
 
-	if conf.ExtAuthz == (ExtAuthzConfig{}) {
-		log.Warnf("[ExtAuthz] Invalid config: %v", *conf)
+	if conf.AuthorizationEndpointAddress == "" {
+		log.Warn("[ExtAuthz] No endpoint for the ext-authz service is confiured.")
 		return decision
 	}
-	extAuthzConfig := conf.ExtAuthz
-	log.Debugf("[ExtAuthz] Using configuration for extern-authz: %v", extAuthzConfig)
-	if extAuthzConfig.PDPHost == "" {
-		log.Warn("[ExtAuthz] No PDP host was specified.")
-		return decision
-	}
-
-	var endpointAddress string
-	if extAuthzConfig.PDPAuthzPath == "" {
-		// default pdp path
-		endpointAddress = extAuthzConfig.PDPHost + "/authz"
-	} else {
-		endpointAddress = extAuthzConfig.PDPHost + extAuthzConfig.PDPAuthzPath
-	}
-	log.Debugf("[ExtAuthz] PDP address is %s", endpointAddress)
+	log.Debugf("[ExtAuthz] PDP address is %s", conf.AuthorizationEndpointAddress)
 
 	// remove bearer prefix
 	authHeader := cleanAuthHeader(requestInfo.AuthorizationHeader)
@@ -69,7 +55,7 @@ func (ExtAuthzPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *
 		return getPositveDecision()
 	}
 
-	authzRequest, err := http.NewRequest(http.MethodPost, endpointAddress, bytes.NewBuffer(extAuthzRequest.RequestBody))
+	authzRequest, err := http.NewRequest(http.MethodPost, conf.AuthorizationEndpointAddress, bytes.NewBuffer(extAuthzRequest.RequestBody))
 	if err != nil {
 		log.Warn("[ExtAuthz] Was not able to build request for the ext-authz service.", err)
 		return decision
