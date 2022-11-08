@@ -34,6 +34,13 @@ type Config struct {
 	DecisionCacheExpiryInS int64
 	// path prefix used, will be removed before handling
 	PathPrefix string
+	// Configuration to use ext-authz
+	ExtAuthz ExtAuthzConfig
+}
+
+type ExtAuthzConfig struct {
+	PDPHost      string
+	PDPAuthzPath string
 }
 
 // represents the neccessary info about a request to be forwarded to PDP
@@ -42,6 +49,7 @@ type RequestInfo struct {
 	Path                string
 	AuthorizationHeader string
 	Headers             map[string][]string
+	Body                []byte
 }
 
 // Interface to the http-client
@@ -55,12 +63,13 @@ type PDP interface {
 	Authorize(conf *Config, requestInfo *RequestInfo) *bool
 }
 
-// inteface to kong for better testability
+// interface to kong for better testability
 type KongI interface {
 	GetPath() (string, error)
 	GetHeader(key string) (string, error)
 	GetHeaders(max_headers int) (map[string][]string, error)
 	GetMethod() (string, error)
+	GetBody() ([]byte, error)
 	Exit(code int, msg string)
 }
 
@@ -85,6 +94,10 @@ func (k Kong) GetMethod() (string, error) {
 	return k.pdk.Request.GetMethod()
 }
 
+func (k Kong) GetBody() ([]byte, error) {
+	return k.pdk.Request.GetRawBody()
+}
+
 func (k Kong) Exit(code int, msq string) {
 	k.pdk.Response.Exit(code, msq, make(map[string][]string))
 }
@@ -104,6 +117,12 @@ var keyrockPDP PDP = &KeyrockPDP{}
 
 // pdp implementation for keycloak
 var keycloakPDP PDP = &KeycloakPDP{}
+
+// pdp implementation for external authz
+var extAuthzPDP PDP = &ExtAuthzPDP{}
+
+// http client to be used for accessing external services
+var authorizationHttpClient httpClient = &http.Client{}
 
 // entrypoint for the plugin-server in Kong. Reads the priority and version of the plugin and starts the server.
 func main() {
@@ -158,9 +177,14 @@ func handleRequest(kong KongI, conf *Config) {
 	}
 
 	if conf.AuthorizationEndpointType == "Keyrock" {
+		log.Debug("Delegate decision to Keyrock.")
 		decision = keyrockPDP.Authorize(conf, &requestInfo)
 	} else if conf.AuthorizationEndpointType == "Keycloak" {
+		log.Debug("Delegate decision to Keycloak.")
 		decision = keycloakPDP.Authorize(conf, &requestInfo)
+	} else if conf.AuthorizationEndpointType == "ExtAuthz" {
+		log.Debug("Delegate decision to ExtAuthz service.")
+		decision = extAuthzPDP.Authorize(conf, &requestInfo)
 	}
 
 	if !*decision {
@@ -198,7 +222,17 @@ func parseKongRequest(kong KongI, pathPrefix *string) (requestInfo RequestInfo, 
 		return requestInfo, err
 	}
 
-	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers}, err
+	var body []byte
+	if requestMethod != http.MethodGet && requestMethod != http.MethodDelete {
+		// only get body if there is one
+		body, err = kong.GetBody()
+		if err != nil {
+			log.Errorf("Was not able to retrieve the request body.")
+			return requestInfo, err
+		}
+	}
+
+	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers, Body: body}, err
 }
 
 // remove prefix from the given path-string

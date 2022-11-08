@@ -30,6 +30,8 @@ type mockKong struct {
 	pathError    error
 	header       string
 	headerError  error
+	body         []byte
+	bodyError    error
 	headers      map[string][]string
 	headersError error
 }
@@ -48,6 +50,10 @@ func (mk mockKong) GetPath() (string, error) {
 
 func (mk mockKong) GetMethod() (string, error) {
 	return mk.method, mk.methodError
+}
+
+func (mk mockKong) GetBody() ([]byte, error) {
+	return mk.body, mk.bodyError
 }
 
 func (mk mockKong) Exit(code int, msg string) {

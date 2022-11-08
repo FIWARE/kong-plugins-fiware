@@ -27,9 +27,6 @@ type KeyrockResponse struct {
 	AuthorizationDecision string `json:"authorization_decision"`
 }
 
-// http client to be used for accessing keyrock
-var authorizationHttpClient httpClient = &http.Client{}
-
 // decision cache used by keyrock
 var keyrockDecisionCache *cache.Cache
 
