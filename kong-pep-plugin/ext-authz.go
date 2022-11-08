@@ -46,6 +46,7 @@ func (ExtAuthzPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *
 	}
 	var exists bool = false
 	if extAuthzCacheEnabled {
+		log.Info("Get cached decision")
 		_, exists = keyrockDecisionCache.Get(cacheKey)
 	}
 
@@ -54,7 +55,7 @@ func (ExtAuthzPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *
 		// we only cache success, thus dont care about the cache value
 		return getPositveDecision()
 	}
-
+	log.Infof("Create req")
 	authzRequest, err := http.NewRequest(http.MethodPost, conf.AuthorizationEndpointAddress, bytes.NewBuffer(extAuthzRequest.RequestBody))
 	if err != nil {
 		log.Warn("[ExtAuthz] Was not able to build request for the ext-authz service.", err)
@@ -65,6 +66,7 @@ func (ExtAuthzPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *
 	// we do the clean and rebuild for bearer to have security about the format. Performance loss is negligible.
 	authzRequest.Header.Add("Authorization", "Bearer "+extAuthzRequest.AccessToken)
 
+	log.Info("Do the request")
 	// request a decision from the pdp
 	response, err := authorizationHttpClient.Do(authzRequest)
 	if err != nil {
