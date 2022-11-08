@@ -239,6 +239,8 @@ func parseKongRequest(kong KongI, pathPrefix *string) (requestInfo RequestInfo, 
 		return requestInfo, err
 	}
 
+	pathWithQuery = stripPrefix(*pathPrefix, pathWithQuery)
+
 	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers, Body: body, PathWithQuery: pathWithQuery}, err
 }
 
