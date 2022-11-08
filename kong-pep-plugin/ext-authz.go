@@ -38,8 +38,9 @@ func (ExtAuthzPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *
 
 	// remove bearer prefix
 	authHeader := cleanAuthHeader(requestInfo.AuthorizationHeader)
+
 	// build the cache key and check if a decision is available
-	extAuthzRequest := ExtAuthzRequest{AccessToken: authHeader, RequestUrl: requestInfo.Path, RequestAction: requestInfo.Method, RequestBody: requestInfo.Body}
+	extAuthzRequest := ExtAuthzRequest{AccessToken: authHeader, RequestUrl: requestInfo.PathWithQuery, RequestAction: requestInfo.Method, RequestBody: requestInfo.Body}
 	cacheKey := fmt.Sprint(extAuthzRequest)
 	if extAuthzCache == nil {
 		initExtAuthzCache(conf)

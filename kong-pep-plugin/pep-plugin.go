@@ -43,6 +43,7 @@ type RequestInfo struct {
 	AuthorizationHeader string
 	Headers             map[string][]string
 	Body                []byte
+	PathWithQuery       string
 }
 
 // Interface to the http-client
@@ -60,9 +61,10 @@ type PDP interface {
 type KongI interface {
 	GetPath() (string, error)
 	GetHeader(key string) (string, error)
-	GetHeaders(max_headers int) (map[string][]string, error)
+	GetHeaders(maxHeaders int) (map[string][]string, error)
 	GetMethod() (string, error)
 	GetBody() ([]byte, error)
+	GetPathWithQuery() (string, error)
 	Exit(code int, msg string)
 }
 
@@ -79,8 +81,8 @@ func (k Kong) GetHeader(key string) (string, error) {
 	return k.pdk.Request.GetHeader(key)
 }
 
-func (k Kong) GetHeaders(max_headers int) (map[string][]string, error) {
-	return k.pdk.Request.GetHeaders(max_headers)
+func (k Kong) GetHeaders(maxHeaders int) (map[string][]string, error) {
+	return k.pdk.Request.GetHeaders(maxHeaders)
 }
 
 func (k Kong) GetMethod() (string, error) {
@@ -89,6 +91,10 @@ func (k Kong) GetMethod() (string, error) {
 
 func (k Kong) GetBody() ([]byte, error) {
 	return k.pdk.Request.GetRawBody()
+}
+
+func (k Kong) GetPathWithQuery() (string, error) {
+	return k.pdk.Request.GetPathWithQuery()
 }
 
 func (k Kong) Exit(code int, msq string) {
@@ -226,7 +232,14 @@ func parseKongRequest(kong KongI, pathPrefix *string) (requestInfo RequestInfo, 
 		}
 	}
 
-	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers, Body: body}, err
+	// we restrict to 20 params for now.
+	pathWithQuery, err := kong.GetPathWithQuery()
+	if err != nil {
+		log.Errorf("Was not able to retrieve path with query. Err: %v", err)
+		return requestInfo, err
+	}
+
+	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers, Body: body, PathWithQuery: pathWithQuery}, err
 }
 
 // remove prefix from the given path-string
