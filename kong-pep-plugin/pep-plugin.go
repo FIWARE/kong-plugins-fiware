@@ -119,6 +119,7 @@ var authorizationHttpClient httpClient = &http.Client{}
 
 // entrypoint for the plugin-server in Kong. Reads the priority and version of the plugin and starts the server.
 func main() {
+	log.SetLevel(log.DebugLevel)
 
 	pepPluginPriorityEnv := os.Getenv("PEP_PLUGIN_PRIORITY")
 	if pepPluginPriorityEnv != "" {
