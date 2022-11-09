@@ -13,10 +13,10 @@
     <inceptionYear>2022</inceptionYear>
 
     <properties>
-        <kong.image>fiware/kong:0.0.1</kong.image>
+        <kong.image>fiware/kong:latest</kong.image>
 
         <version.org.junit.jupiter>5.8.2</version.org.junit.jupiter>
-        <version.io.kokuwa.maven.k3s-plugin>0.5.0</version.io.kokuwa.maven.k3s-plugin>
+        <version.io.kokuwa.maven.k3s-plugin>0.6.2</version.io.kokuwa.maven.k3s-plugin>
         <version.org.apache.maven.plugins.compiler>3.10.1</version.org.apache.maven.plugins.compiler>
         <version.org.apache.maven.plugins.install>3.0.0-M1</version.org.apache.maven.plugins.install>
         <version.org.apache.maven.plugins.source>3.2.1</version.org.apache.maven.plugins.source>
@@ -118,51 +118,112 @@
                 </executions>
             </plugin>
 
-            <!-- run tests -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <failIfNoTests>true</failIfNoTests>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>io.kokuwa.maven</groupId>
-                <artifactId>k3s-maven-plugin</artifactId>
-                <version>${version.io.kokuwa.maven.k3s-plugin}</version>
-                <executions>
-                    <execution>
-                        <id>prepare-test-cluster</id>
-                        <goals>
-                            <goal>create</goal>
-                            <goal>start</goal>
-                            <goal>image</goal>
-                            <goal>kubectl</goal>
-                            <goal>rm</goal>
-                        </goals>
-                        <configuration>
-                            <streamLogs>true</streamLogs>
-                            <dockerImages>
-                                <dockerImage>${kong.image}</dockerImage>
-                            </dockerImages>
-                            <portBindings>
-                                <portBinding>8090:80</portBinding>
-                                <portBinding>9090:9090</portBinding>
-                                <portBinding>8080:8080</portBinding>
-                                <portBinding>8070:8070</portBinding>
-                            </portBindings>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <build>
+                <plugins>
+                    <!-- run tests -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <failIfNoTests>true</failIfNoTests>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>io.kokuwa.maven</groupId>
+                        <artifactId>k3s-maven-plugin</artifactId>
+                        <version>${version.io.kokuwa.maven.k3s-plugin}</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-test-cluster</id>
+                                <goals>
+                                    <goal>create</goal>
+                                    <goal>start</goal>
+                                    <goal>image</goal>
+                                    <goal>kubectl</goal>
+                                    <goal>rm</goal>
+                                </goals>
+                                <configuration>
+                                    <streamLogs>true</streamLogs>
+                                    <dockerImages>
+                                        <dockerImage>${kong.image}</dockerImage>
+                                    </dockerImages>
+                                    <portBindings>
+                                        <portBinding>8090:80</portBinding>
+                                        <portBinding>9090:9090</portBinding>
+                                        <portBinding>8080:6080</portBinding>
+                                        <portBinding>8070:8070</portBinding>
+                                    </portBindings>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>dev</id>
+            <build>
+                <plugins>
+                    <!-- run tests -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>io.kokuwa.maven</groupId>
+                        <artifactId>k3s-maven-plugin</artifactId>
+                        <version>${version.io.kokuwa.maven.k3s-plugin}</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-test-cluster</id>
+                                <goals>
+                                    <goal>create</goal>
+                                    <goal>start</goal>
+                                    <goal>image</goal>
+                                    <goal>kubectl</goal>
+                                </goals>
+                                <configuration>
+                                    <streamLogs>true</streamLogs>
+                                    <dockerImages>
+                                        <dockerImage>${kong.image}</dockerImage>
+                                    </dockerImages>
+                                    <portBindings>
+                                        <portBinding>8090:80</portBinding>
+                                        <portBinding>9090:9090</portBinding>
+                                        <portBinding>8080:6080</portBinding>
+                                        <portBinding>8050:5080</portBinding>
+                                        <portBinding>8070:8070</portBinding>
+                                    </portBindings>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

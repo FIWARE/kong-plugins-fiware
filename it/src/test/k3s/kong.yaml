@@ -79,6 +79,32 @@ data:
                 headers:
                   - Authorization
                   - authorization
+    
+      - host: "orion-ld"
+        name: "orion-ext-authz"
+        port: 1026
+        protocol: http
+    
+        routes:
+          - name: orion-ext-authz
+            paths:
+              - /orion-ext-authz
+            strip_path: true
+    
+        plugins:
+          - name: pep-plugin
+            config:
+              pathprefix: "/orion-ext-authz"
+              authorizationendpointtype: ExtAuthz
+              authorizationendpointaddress: http://dsba-pdp:8080/authz
+              
+    
+          - name: request-transformer
+            config:
+              remove:
+                headers:
+                  - Authorization
+                  - authorization
 ---
 # Source: kong/charts/kong/templates/service-kong-proxy.yaml
 apiVersion: v1
@@ -147,7 +173,7 @@ spec:
       automountServiceAccountToken: true
       initContainers:
         - name: clear-stale-pid
-          image: fiware/kong:0.0.1
+          image: fiware/kong:latest
           imagePullPolicy: Never
           command:
             - "rm"
@@ -219,7 +245,7 @@ spec:
               mountPath: /kong_dbless/
       containers:
         - name: "proxy"
-          image: fiware/kong:0.0.1
+          image: fiware/kong:latest
           imagePullPolicy: Never
           env:
             - name: KONG_ADMIN_ACCESS_LOG
