@@ -94,7 +94,7 @@ spec:
             - name: IDM_HOST
               value: http://localhost
             - name: IDM_DB_HOST
-              value: "mysql"
+              value: "mysql-pdp"
             - name: IDM_DB_PASS
               value: "password"
             - name: IDM_DB_USER
