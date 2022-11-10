@@ -216,6 +216,7 @@
                                         <portBinding>8080:6080</portBinding>
                                         <portBinding>8050:5080</portBinding>
                                         <portBinding>8070:8070</portBinding>
+                                        <portBinding>8040:8080</portBinding>
                                     </portBindings>
                                 </configuration>
                             </execution>
