@@ -378,5 +378,106 @@ curl --location --request POST 'http://localhost:8050/ar/policy' \
    ```
 5. Now you can rerun the original request and will get a 200 response. 
 
+# Issue a VC
 
+1. Create the issuer did:
+   
+```shell
+curl --location --request POST 'localhost:7002/did/create' \
+   --header 'Content-Type: application/json' \
+   --data-raw '{
+       "method": "ebsi",
+       "didWebDomain": "happypets"
+   }'
+```
 
+2. Issue the vc, the issuer id needs to be the one created in the step before:
+
+```shell
+curl --location --request POST 'localhost:7001/v1/credentials/issue' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "templateId": "CustomerCredential",
+    "config":
+    {   
+        "issuerDid": "did:ebsi:zxcWtX2Xb9aZRTmiweYcu4d",
+        "subjectDid": "did:peer:someone"
+    },
+    "credentialData":
+    {
+        "credentialSubject":
+        {
+          "id": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
+            "roles": [
+                {
+                    "name": [
+                        "GOLD_CUSTOMER"
+                    ],
+                    "target": "did:ebsi:packetdelivery"
+                }
+            ]
+        }
+    }
+}'
+```
+
+3. Verify the credential:
+```shell
+curl --location --request POST 'localhost:7003/v1/verify' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "policies": [
+        {
+            "policy": "SignaturePolicy"
+        },{
+            "policy": "TrustedIssuerDidPolicy"
+        },{
+            "policy": "IssuedDateBeforePolicy"
+        },{
+            "policy": "ValidFromBeforePolicy"
+        },{
+            "policy": "ExpirationDateAfterPolicy"
+        }
+    ],
+    "credentials":
+    [
+        {
+            "@context": [
+                "https://www.w3.org/2018/credentials/v1",
+                "https://w3id.org/security/suites/jws-2020/v1"
+            ],
+            "credentialSchema": {
+                "id": "https://raw.githubusercontent.com/walt-id/waltid-ssikit-vclib/master/src/test/resources/schemas/CustomerCredential.json",
+                "type": "JsonSchemaValidator2018"
+            },
+            "credentialSubject": {
+                "id": "did:peer:someone",
+                "roles": [
+                    {
+                        "name": [
+                            "GOLD_CUSTOMER"
+                        ],
+                        "target": "did:ebsi:packetdelivery"
+                    }
+                ]
+            },
+            "id": "urn:uuid:b12235da-404b-4dc5-a87a-20a5d2585585",
+            "issued": "2022-11-23T15:23:13Z",
+            "issuer": "did:ebsi:zxcWtX2Xb9aZRTmiweYcu4d",
+            "validFrom": "2022-11-23T15:23:13Z",
+            "issuanceDate": "2022-11-23T15:23:13Z",
+            "type": [
+                "VerifiableCredential",
+                "CustomerCredential"
+            ],
+            "proof": {
+                "type": "JsonWebSignature2020",
+                "creator": "did:ebsi:zxcWtX2Xb9aZRTmiweYcu4d",
+                "created": "2022-11-23T15:23:13Z",
+                "verificationMethod": "did:ebsi:zxcWtX2Xb9aZRTmiweYcu4d#12c54fc7572745deb55043f56033471f",
+                "jws": "eyJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJhbGciOiJFZERTQSJ9..c-5dyQMwBJG7yxgpClw_uxcDHdfPUo_sAdAyQt8gAm-IN9YUIK0drHRF_XSFUpXB8VmHn-lCh1OPpNr4e-7ECA"
+            }
+        }
+    ]
+}'
+```

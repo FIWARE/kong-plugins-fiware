@@ -209,6 +209,8 @@
                                     <streamLogs>true</streamLogs>
                                     <dockerImages>
                                         <dockerImage>${kong.image}</dockerImage>
+                                        <dockerImage>dsba</dockerImage>
+                                        <dockerImage>waltid</dockerImage>
                                     </dockerImages>
                                     <portBindings>
                                         <portBinding>8090:80</portBinding>
@@ -217,6 +219,12 @@
                                         <portBinding>8050:5080</portBinding>
                                         <portBinding>8070:8070</portBinding>
                                         <portBinding>8040:8080</portBinding>
+                                        <!-- walt-id -->
+                                        <portBinding>7000:7000</portBinding>
+                                        <portBinding>7001:7001</portBinding>
+                                        <portBinding>7002:7002</portBinding>
+                                        <portBinding>7003:7003</portBinding>
+                                        <portBinding>7004:7004</portBinding>
                                     </portBindings>
                                 </configuration>
                             </execution>

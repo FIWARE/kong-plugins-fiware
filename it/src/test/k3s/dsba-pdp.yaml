@@ -213,10 +213,20 @@ spec:
         app.kubernetes.io/instance: dsba-pdp
     spec:
       serviceAccountName: default
+      initContainers:
+        - name: db-migrate
+          image: "quay.io/wi_stefan/dsba-db-migrations"
+          imagePullPolicy: Always
+          command: ["rel", "migrate"]
+          env:
+            - name: MYSQL_HOST
+              value: "mysql-trustedlist"
+            - name: MYSQL_PORT
+              value: "3306"
       containers:
         - name: dsba-pdp
           imagePullPolicy: Always
-          image: "quay.io/wi_stefan/dsba-pdp:0.0.7-PRE-7"
+          image: "quay.io/wi_stefan/dsba-pdp"
           ports:
             - name: http
               containerPort: 8080
@@ -236,6 +246,10 @@ spec:
               value: "/ar/delegation"
             - name: ISHARE_TOKEN_PATH
               value: "/oauth2/token"
+            - name: MYSQL_HOST
+              value: "mysql-trustedlist"
+            - name: MYSQL_PORT
+              value: "3306"
           volumeMounts:
             - name: ishare-certs
               mountPath: /iShare/
