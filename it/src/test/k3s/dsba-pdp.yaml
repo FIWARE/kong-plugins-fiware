@@ -226,7 +226,7 @@ spec:
       containers:
         - name: dsba-pdp
           imagePullPolicy: Always
-          image: "quay.io/wi_stefan/dsba-pdp"
+          image: "quay.io/wi_stefan/dsba-pdp:0.0.9-PRE-9"
           ports:
             - name: http
               containerPort: 8080
@@ -236,6 +236,8 @@ spec:
               value: "DEBUG"
             - name: JSON_LOGGING_ENABLED
               value: "true"
+            - name: PROVIDER_ID
+              value: "did:ebsi:packetdelivery"
             - name: ISHARE_CLIENT_ID
               value: "EU.EORI.PACKETDELIVERY"
             - name: ISHARE_AR_ID

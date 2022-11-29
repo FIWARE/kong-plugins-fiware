@@ -23,12 +23,12 @@ Use the following steps to configure and test the setup:
 1. Execute:
    ```shell
    curl --location --request GET 'localhost:8070/orion-ext-authz/ngsi-ld/v1/entities?type=DELIVERYORDER' \
-        --header 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJkaWQ6ZWxzaTpwYWNrZXRkZWxpdmVyeSIsImlhdCI6MTY2NzU0NTExMiwiZXhwIjoxNjk5MDgxMTEyLCJhdWQiOiJFVS5FT1JJLlBBQ0tFVERFTElWRVJZIiwic3ViIjoiZGlkOnBlZXI6OTlhYjViY2E0MWJiNDViNzhkMjQyYTQ2ZjAxNTdiN2QiLCJ2ZXJpZmlhYmxlQ3JlZGVudGlhbCI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vaGFwcHlwZXRzLmZpd2FyZS5pby8yMDIyL2NyZWRlbnRpYWxzL2VtcGxveWVlL3YxIl0sImlkIjoiaHR0cHM6Ly9oYXBweXBldHMuZml3YXJlLmlvL2NyZWRlbnRpYWwvMjUxNTkzODktOGRkMTdiNzk2YWMwIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIkN1c3RvbWVyQ3JlZGVudGlhbCJdLCJpc3N1ZXIiOnsiaWQiOiJkaWQ6ZWxzaTpoYXBweXBldHMifSwiY3JlZGVudGlhbFN1YmplY3QiOnsiaWQiOiJkaWQ6cGVlcjo5OWFiNWJjYTQxYmI0NWI3OGQyNDJhNDZmMDE1N2I3ZCIsInJvbGVzIjpbeyJuYW1lIjoiR09MRF9DVVNUT01FUiJ9XX19fQ.oonPkIK5-pmUMA7-HXuyvbLxRfXsp9DrkzrTMZorkwI'
+        --header 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJkaWQ6ZWJzaTpoYXBweXBldHMiLCJpYXQiOjE2Njc1NDUxMTIsImV4cCI6MTY5OTA4MTExMiwiYXVkIjoiRVUuRU9SSS5QQUNLRVRERUxJVkVSWSIsInN1YiI6ImRpZDpwZWVyOjk5YWI1YmNhNDFiYjQ1Yjc4ZDI0MmE0NmYwMTU3YjdkIiwidmVyaWZpYWJsZUNyZWRlbnRpYWwiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLCJodHRwczovL2hhcHB5cGV0cy5maXdhcmUuaW8vMjAyMi9jcmVkZW50aWFscy9lbXBsb3llZS92MSJdLCJpZCI6Imh0dHBzOi8vaGFwcHlwZXRzLmZpd2FyZS5pby9jcmVkZW50aWFsLzI1MTU5Mzg5LThkZDE3Yjc5NmFjMCIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJDdXN0b21lckNyZWRlbnRpYWwiXSwiaXNzdWVyIjoiZGlkOmVic2k6aGFwcHlwZXRzIiwiaXNzdWFuY2VEYXRlIjoiMjAyMi0xMS0yM1QxNToyMzoxM1oiLCJ2YWxpZEZyb20iOiIyMDIyLTExLTIzVDE1OjIzOjEzWiIsImV4cGlyYXRpb25EYXRlIjoiMjAzMi0xMS0yM1QxNToyMzoxM1oiLCJjcmVkZW50aWFsU3ViamVjdCI6eyJpZCI6ImRpZDpwZWVyOjk5YWI1YmNhNDFiYjQ1Yjc4ZDI0MmE0NmYwMTU3YjdkIiwicm9sZXMiOlt7Im5hbWUiOlsiR09MRF9DVVNUT01FUiJdLCJ0YXJnZXQiOiJkaWQ6ZWJzaTpwYWNrZXRkZWxpdmVyeSJ9XX19fQ.R_RmlFkFaeYVR6DHzDr8_K2EpJMOL9oIsABBJuIK1QQ'
    ```
    The VC inside the token is: 
    ```json
    {
-      "iss": "did:elsi:packetdelivery",
+      "iss": "did:ebsi:happypets",
       "iat": 1667545112,
       "exp": 1699081112,
       "aud": "EU.EORI.PACKETDELIVERY",
@@ -43,14 +43,16 @@ Use the following steps to configure and test the setup:
             "VerifiableCredential",
             "CustomerCredential"
          ],
-         "issuer": {
-            "id": "did:elsi:happypets"
-         },
+         "issuer": "did:ebsi:happypets",
+         "issuanceDate": "2022-11-23T15:23:13Z",
+         "validFrom": "2022-11-23T15:23:13Z",
+         "expirationDate": "2032-11-23T15:23:13Z",
          "credentialSubject": {
             "id": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
             "roles": [
                {
-                  "name": "GOLD_CUSTOMER"
+                  "name": ["GOLD_CUSTOMER"],
+                  "target": "did:ebsi:packetdelivery"
                }
             ]
          }
@@ -170,12 +172,12 @@ Using the IShareCustomerCredential allows the consumer(e.g. HappyPets) to define
 1. Execute:
    ```shell
    curl --location --request GET 'localhost:8070/orion-ext-authz/ngsi-ld/v1/entities?type=DELIVERYORDER' \
-        --header 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJkaWQ6ZWxzaTpwYWNrZXRkZWxpdmVyeSIsImlhdCI6MTY2NzU0NTExMiwiZXhwIjoxNjk5MDgxMTEyLCJhdWQiOiJFVS5FT1JJLlBBQ0tFVERFTElWRVJZIiwic3ViIjoiZGlkOnBlZXI6OTlhYjViY2E0MWJiNDViNzhkMjQyYTQ2ZjAxNTdiN2QiLCJ2ZXJpZmlhYmxlQ3JlZGVudGlhbCI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vaGFwcHlwZXRzLmZpd2FyZS5pby8yMDIyL2NyZWRlbnRpYWxzL2VtcGxveWVlL3YxIl0sImlkIjoiaHR0cHM6Ly9oYXBweXBldHMuZml3YXJlLmlvL2NyZWRlbnRpYWwvMjUxNTkzODktOGRkMTdiNzk2YWMwIiwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklTaGFyZUN1c3RvbWVyQ3JlZGVudGlhbCJdLCJpc3N1ZXIiOnsiaWQiOiJkaWQ6ZWxzaTpoYXBweXBldHMifSwiY3JlZGVudGlhbFN1YmplY3QiOnsiaWQiOiJkaWQ6cGVlcjo5OWFiNWJjYTQxYmI0NWI3OGQyNDJhNDZmMDE1N2I3ZCIsImF1dGhvcml6YXRpb25SZWdpc3RyeSI6eyJpZCI6IkVVLkVPUkkuSEFQUFlQRVRTIiwiaG9zdCI6Imh0dHA6Ly9rZXlyb2NrOjYwODAiLCJ0b2tlblBhdGgiOiIvb2F1dGgyL3Rva2VuIiwiZGVsZWdhdGlvblBhdGgiOiIvYXIvZGVsZWdhdGlvbiJ9LCJuYW1lIjoiVXNlckEiLCJnaXZlbl9uYW1lIjoiVXNlciIsImZhbWlseV9uYW1lIjoiQSIsInByZWZlcnJlZF91c2VybmFtZSI6InVzZXItYSIsImVtYWlsIjoidXNlckBhLm9yZyIsInJvbGVzIjpbeyJuYW1lIjoiSEFQUFlQRVRTX1NUQU5EQVJEIn1dfX19.bnrOIT0sGDqcKkQIF66rXKO99gemjz19d7IJg9sjr20'
+        --header 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJkaWQ6ZWxzaTpoYXBweXBldHMiLCJpYXQiOjE2Njc1NDUxMTIsImV4cCI6MTY5OTA4MTExMiwiYXVkIjoiRVUuRU9SSS5QQUNLRVRERUxJVkVSWSIsInN1YiI6ImRpZDpwZWVyOjk5YWI1YmNhNDFiYjQ1Yjc4ZDI0MmE0NmYwMTU3YjdkIiwidmVyaWZpYWJsZUNyZWRlbnRpYWwiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiLCJodHRwczovL2hhcHB5cGV0cy5maXdhcmUuaW8vMjAyMi9jcmVkZW50aWFscy9lbXBsb3llZS92MSJdLCJpZCI6Imh0dHBzOi8vaGFwcHlwZXRzLmZpd2FyZS5pby9jcmVkZW50aWFsLzI1MTU5Mzg5LThkZDE3Yjc5NmFjMCIsInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiLCJDdXN0b21lckNyZWRlbnRpYWwiXSwiaXNzdWVyIjoiZGlkOmVic2k6aGFwcHlwZXRzIiwiaXNzdWFuY2VEYXRlIjoiMjAyMi0xMS0yM1QxNToyMzoxM1oiLCJ2YWxpZEZyb20iOiIyMDIyLTExLTIzVDE1OjIzOjEzWiIsImV4cGlyYXRpb25EYXRlIjoiMjAzMi0xMS0yM1QxNToyMzoxM1oiLCJjcmVkZW50aWFsU3ViamVjdCI6eyJpZCI6ImRpZDpwZWVyOjk5YWI1YmNhNDFiYjQ1Yjc4ZDI0MmE0NmYwMTU3YjdkIiwiYXV0aG9yaXphdGlvblJlZ2lzdHJ5Ijp7IkVVLkVPUkkuSEFQUFlQRVRTIjp7Imhvc3QiOiJodHRwOi8va2V5cm9jazo2MDgwIiwidG9rZW5QYXRoIjoiL29hdXRoMi90b2tlbiIsImRlbGVnYXRpb25QYXRoIjoiL2FyL2RlbGVnYXRpb24ifX0sInJvbGVzIjpbeyJuYW1lIjpbIkdPTERfQ1VTVE9NRVIiXSwidGFyZ2V0IjoiZGlkOmVic2k6cGFja2V0ZGVsaXZlcnkiLCJwcm92aWRlciI6IkVVLkVPUkkuSEFQUFlQRVRTIn1dfX19.zqLI-vwBCveZTnpECAAKtGoOtkWM3LwKackWYye_CwE'
    ```
    The VC inside the token is:
 ```json
 {
-   "iss": "did:elsi:packetdelivery",
+   "iss": "did:elsi:happypets",
    "iat": 1667545112,
    "exp": 1699081112,
    "aud": "EU.EORI.PACKETDELIVERY",
@@ -188,27 +190,28 @@ Using the IShareCustomerCredential allows the consumer(e.g. HappyPets) to define
       "id": "https://happypets.fiware.io/credential/25159389-8dd17b796ac0",
       "type": [
          "VerifiableCredential",
-         "IShareCustomerCredential"
+         "CustomerCredential"
       ],
-      "issuer": {
-         "id": "did:elsi:happypets"
-      },
+      "issuer": "did:ebsi:happypets",
+      "issuanceDate": "2022-11-23T15:23:13Z",
+      "validFrom": "2022-11-23T15:23:13Z",
+      "expirationDate": "2032-11-23T15:23:13Z",
       "credentialSubject": {
          "id": "did:peer:99ab5bca41bb45b78d242a46f0157b7d",
          "authorizationRegistry": {
-            "id": "EU.EORI.HAPPYPETS",
-            "host": "http://keyrock:6080",
-            "tokenPath": "/oauth2/token",
-            "delegationPath": "/ar/delegation"
+            "EU.EORI.HAPPYPETS": {
+               "host": "http://keyrock:6080",
+               "tokenPath": "/oauth2/token",
+               "delegationPath": "/ar/delegation"
+            }
          },
-         "name": "UserA",
-         "given_name": "User",
-         "family_name": "A",
-         "preferred_username": "user-a",
-         "email": "user@a.org",
-         "roles": [{
-            "name": "HAPPYPETS_STANDARD"
-         }]
+         "roles": [
+            {
+               "name": ["GOLD_CUSTOMER"],
+               "target": "did:ebsi:packetdelivery",
+               "provider": "EU.EORI.HAPPYPETS"
+            }
+         ]
       }
    }
 }
@@ -227,13 +230,26 @@ Using the IShareCustomerCredential allows the consumer(e.g. HappyPets) to define
            "from": "2017-07-21T17:32:28Z",
            "to": "2023-07-21T17:32:28Z"
          },
-         "credentialsType": "IShareCustomerCredential",
+         "credentialsType": "CustomerCredential",
          "claims": [
            {
              "name": "authorizationRegistry",
              "allowedValues": [
                "EU.EORI.HAPPYPETS"
              ]
+           },
+           {
+             "name": "roles.provider",
+             "allowedValues": [
+               "EU.EORI.HAPPYPETS"
+             ]
+           },
+           {
+            "name" : "roles",
+            "allowedValues": [
+              "GOLD_CUSTOMER",
+              "STANDARD_CUSTOMER"
+            ]
            }
          ],
          "policy": {}
@@ -386,8 +402,7 @@ curl --location --request POST 'http://localhost:8050/ar/policy' \
 curl --location --request POST 'localhost:7002/did/create' \
    --header 'Content-Type: application/json' \
    --data-raw '{
-       "method": "ebsi",
-       "didWebDomain": "happypets"
+       "method": "ebsi"
    }'
 ```
 
