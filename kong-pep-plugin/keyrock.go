@@ -69,7 +69,7 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 	query.Add("action", requestInfo.Method)
 	query.Add("resource", requestInfo.Path)
 	query.Add("access_token", authHeader)
-	query.Add("app-id", conf.KeyrockAppId)
+	query.Add("app_id", conf.KeyrockAppId)
 	authzRequest.URL.RawQuery = query.Encode()
 
 	// request a decision from keyrock
