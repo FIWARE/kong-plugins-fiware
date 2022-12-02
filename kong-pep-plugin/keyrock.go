@@ -27,9 +27,6 @@ type KeyrockResponse struct {
 	AuthorizationDecision string `json:"authorization_decision"`
 }
 
-// http client to be used for accessing keyrock
-var authorizationHttpClient httpClient = &http.Client{}
-
 // decision cache used by keyrock
 var keyrockDecisionCache *cache.Cache
 
@@ -72,6 +69,7 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 	query.Add("action", requestInfo.Method)
 	query.Add("resource", requestInfo.Path)
 	query.Add("access_token", authHeader)
+	query.Add("app_id", conf.KeyrockAppId)
 	query.Add("app-id", conf.KeyrockAppId)
 	authzRequest.URL.RawQuery = query.Encode()
 
@@ -82,7 +80,8 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 		return
 	}
 	if response.StatusCode != 200 {
-		log.Errorf("[Keyrock] Did not receive a successfull response. Status: %v", response.StatusCode)
+		log.Errorf("[Keyrock] Request at %s to test: %s - %s Token: %s App: %s", conf.AuthorizationEndpointAddress, requestInfo.Method, requestInfo.Path, authHeader, conf.KeyrockAppId)
+		log.Errorf("[Keyrock] Did not receive a successfull response. Status: %v, Body: %v", response.StatusCode, response.Body)
 		return
 	}
 
@@ -100,7 +99,7 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 		}
 		return getPositveDecision()
 	} else {
-		log.Infof("[Keyrock] Request was not allowed.")
+		log.Infof("[Keyrock] Request was not allowed. Response was %v.", response.Body)
 		return
 	}
 }
