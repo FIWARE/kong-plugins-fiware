@@ -73,7 +73,7 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 	query.Add("resource", requestInfo.Path)
 	query.Add("access_token", authHeader)
 	query.Add("app_id", conf.KeyrockAppId)
-	query.Add("app_id", conf.KeyrockAppId)
+	query.Add("app-id", conf.KeyrockAppId)
 	authzRequest.URL.RawQuery = query.Encode()
 
 	// request a decision from keyrock
@@ -83,7 +83,6 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 		return
 	}
 	if response.StatusCode != 200 {
-		log.Errorf("[Keyrock] Request at %s to test: %s - %s Token: %s App: %s", conf.AuthorizationEndpointAddress, requestInfo.Method, requestInfo.Path, authHeader, conf.KeyrockAppId)
 		log.Errorf("[Keyrock] Did not receive a successfull response. Status: %v, Body: %v", response.StatusCode, response.Body)
 		return
 	}
