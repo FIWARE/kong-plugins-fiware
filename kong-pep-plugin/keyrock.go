@@ -80,7 +80,6 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 		return
 	}
 	if response.StatusCode != 200 {
-		log.Errorf("[Keyrock] Request at %s to test: %s - %s Token: %s App: %s", conf.AuthorizationEndpointAddress, requestInfo.Method, requestInfo.Path, authHeader, conf.KeyrockAppId)
 		log.Errorf("[Keyrock] Did not receive a successfull response. Status: %v, Body: %v", response.StatusCode, response.Body)
 		return
 	}
