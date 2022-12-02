@@ -190,6 +190,7 @@ func handleRequest(kong KongI, conf *Config) {
 	if !*decision {
 		log.Infof("Request was not allowed.")
 		kong.Exit(403, fmt.Sprintf("Request forbidden by authorization service %s.", conf.AuthorizationEndpointType))
+		return
 	}
 	log.Debugf("Request was allowed.")
 }

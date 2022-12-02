@@ -98,7 +98,7 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 		}
 		return getPositveDecision()
 	} else {
-		log.Infof("[Keyrock] Request was not allowed.")
+		log.Infof("[Keyrock] Request was not allowed. Response was %v.", response.Body)
 		return
 	}
 }
