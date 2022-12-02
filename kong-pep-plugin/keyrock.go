@@ -10,6 +10,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// http client to be used for accessing keyrock
+var authorizationHttpClient httpClient = &http.Client{}
+
 // implementation of the PDP-inteface for keyrock
 type KeyrockPDP struct{}
 
