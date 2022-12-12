@@ -29,9 +29,9 @@ type Config struct {
 	// optional claims to be added when accessing keycloak. key is the claim to be used, value the header to get the claim from
 	KeycloackAdditionalClaims map[string]string
 	// expiry time for keycloaks resource cache
-	KeycloakResourceCacheExpiryInS int64
+	KeycloakResourceCacheExpiryInS int
 	// expiry time for the decision cache, -1 disables the cache
-	DecisionCacheExpiryInS int64
+	DecisionCacheExpiryInS int
 	// path prefix used, will be removed before handling
 	PathPrefix string
 }
@@ -42,6 +42,8 @@ type RequestInfo struct {
 	Path                string
 	AuthorizationHeader string
 	Headers             map[string][]string
+	Body                []byte
+	PathWithQuery       string
 }
 
 // Interface to the http-client
@@ -55,12 +57,14 @@ type PDP interface {
 	Authorize(conf *Config, requestInfo *RequestInfo) *bool
 }
 
-// inteface to kong for better testability
+// interface to kong for better testability
 type KongI interface {
 	GetPath() (string, error)
 	GetHeader(key string) (string, error)
-	GetHeaders(max_headers int) (map[string][]string, error)
+	GetHeaders(maxHeaders int) (map[string][]string, error)
 	GetMethod() (string, error)
+	GetBody() ([]byte, error)
+	GetPathWithQuery() (string, error)
 	Exit(code int, msg string)
 }
 
@@ -77,12 +81,20 @@ func (k Kong) GetHeader(key string) (string, error) {
 	return k.pdk.Request.GetHeader(key)
 }
 
-func (k Kong) GetHeaders(max_headers int) (map[string][]string, error) {
-	return k.pdk.Request.GetHeaders(max_headers)
+func (k Kong) GetHeaders(maxHeaders int) (map[string][]string, error) {
+	return k.pdk.Request.GetHeaders(maxHeaders)
 }
 
 func (k Kong) GetMethod() (string, error) {
 	return k.pdk.Request.GetMethod()
+}
+
+func (k Kong) GetBody() ([]byte, error) {
+	return k.pdk.Request.GetRawBody()
+}
+
+func (k Kong) GetPathWithQuery() (string, error) {
+	return k.pdk.Request.GetPathWithQuery()
 }
 
 func (k Kong) Exit(code int, msq string) {
@@ -97,7 +109,7 @@ var Version string
 var DefaultPriority = 805
 
 // default expiry for decision caching
-var DefaultExpiry int64 = 60
+var DefaultExpiry int = 60
 
 // pdp implementation for keyrock
 var keyrockPDP PDP = &KeyrockPDP{}
@@ -105,8 +117,15 @@ var keyrockPDP PDP = &KeyrockPDP{}
 // pdp implementation for keycloak
 var keycloakPDP PDP = &KeycloakPDP{}
 
+// pdp implementation for external authz
+var extAuthzPDP PDP = &ExtAuthzPDP{}
+
+// http client to be used for accessing external services
+var authorizationHttpClient httpClient = &http.Client{}
+
 // entrypoint for the plugin-server in Kong. Reads the priority and version of the plugin and starts the server.
 func main() {
+	log.SetLevel(log.DebugLevel)
 
 	pepPluginPriorityEnv := os.Getenv("PEP_PLUGIN_PRIORITY")
 	if pepPluginPriorityEnv != "" {
@@ -158,14 +177,20 @@ func handleRequest(kong KongI, conf *Config) {
 	}
 
 	if conf.AuthorizationEndpointType == "Keyrock" {
+		log.Debug("Delegate decision to Keyrock.")
 		decision = keyrockPDP.Authorize(conf, &requestInfo)
 	} else if conf.AuthorizationEndpointType == "Keycloak" {
+		log.Debug("Delegate decision to Keycloak.")
 		decision = keycloakPDP.Authorize(conf, &requestInfo)
+	} else if conf.AuthorizationEndpointType == "ExtAuthz" {
+		log.Debug("Delegate decision to ExtAuthz service.")
+		decision = extAuthzPDP.Authorize(conf, &requestInfo)
 	}
 
 	if !*decision {
 		log.Infof("Request was not allowed.")
 		kong.Exit(403, fmt.Sprintf("Request forbidden by authorization service %s.", conf.AuthorizationEndpointType))
+		return
 	}
 	log.Debugf("Request was allowed.")
 }
@@ -198,7 +223,26 @@ func parseKongRequest(kong KongI, pathPrefix *string) (requestInfo RequestInfo, 
 		return requestInfo, err
 	}
 
-	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers}, err
+	var body []byte
+	if requestMethod != http.MethodGet && requestMethod != http.MethodDelete {
+		// only get body if there is one
+		body, err = kong.GetBody()
+		if err != nil {
+			log.Errorf("Was not able to retrieve the request body.")
+			return requestInfo, err
+		}
+	}
+
+	// we restrict to 20 params for now.
+	pathWithQuery, err := kong.GetPathWithQuery()
+	if err != nil {
+		log.Errorf("Was not able to retrieve path with query. Err: %v", err)
+		return requestInfo, err
+	}
+
+	pathWithQuery = stripPrefix(*pathPrefix, pathWithQuery)
+
+	return RequestInfo{Method: requestMethod, Path: requestPath, AuthorizationHeader: authHeader, Headers: headers, Body: body, PathWithQuery: pathWithQuery}, err
 }
 
 // remove prefix from the given path-string
