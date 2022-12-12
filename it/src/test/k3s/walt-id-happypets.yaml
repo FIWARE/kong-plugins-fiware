@@ -1,0 +1,66 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: waltid-happypets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: waltid-happypets
+  template:
+    metadata:
+      labels:
+        app: waltid-happypets
+      annotations:
+        deployment/id: "_DEFAULT_DEPLOYMENT_"
+    spec:
+      containers:
+        - name: waltid-happypets
+          image: wistefan/waltid-ssikit:0.0.1
+          imagePullPolicy: Always
+          args:
+            - serve
+            - -b
+            - 0.0.0.0
+          ports:
+            - containerPort: 7000
+              name: core-api
+            - containerPort: 7001
+              name: signatory-api
+            - containerPort: 7002
+              name: custodian-api
+            - containerPort: 7003
+              name: auditor-api
+            - containerPort: 7004
+              name: essif-api
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: waltid-happypets
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http-core
+      port: 6000
+      targetPort: core-api
+      protocol: TCP
+    - name: http-signatory
+      port: 6001
+      targetPort: signatory-api
+      protocol: TCP
+    - name: http-custodian
+      port: 6002
+      targetPort: custodian-api
+      protocol: TCP
+    - name: http-auditor
+      port: 6003
+      targetPort: auditor-api
+      protocol: TCP
+    - name: http-essif
+      port: 6004
+      targetPort: essif-api
+      protocol: TCP
+  selector:
+    app: waltid-happypets

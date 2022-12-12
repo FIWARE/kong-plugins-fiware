@@ -24,14 +24,18 @@ func (mPDP mockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision 
 }
 
 type mockKong struct {
-	method       string
-	methodError  error
-	path         string
-	pathError    error
-	header       string
-	headerError  error
-	headers      map[string][]string
-	headersError error
+	method             string
+	methodError        error
+	path               string
+	pathError          error
+	header             string
+	headerError        error
+	body               []byte
+	bodyError          error
+	pathWithQuery      string
+	pathWithQueryError error
+	headers            map[string][]string
+	headersError       error
 }
 
 func (mk mockKong) GetHeader(k string) (string, error) {
@@ -48,6 +52,14 @@ func (mk mockKong) GetPath() (string, error) {
 
 func (mk mockKong) GetMethod() (string, error) {
 	return mk.method, mk.methodError
+}
+
+func (mk mockKong) GetBody() ([]byte, error) {
+	return mk.body, mk.bodyError
+}
+
+func (mk mockKong) GetPathWithQuery() (string, error) {
+	return mk.pathWithQuery, mk.pathWithQueryError
 }
 
 func (mk mockKong) Exit(code int, msg string) {

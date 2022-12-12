@@ -65,7 +65,7 @@ var keycloakCacheEnabled bool = true
 var keycloakDecisionCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
 
 // expiry for decision cache entries
-var decisionExpiry int64
+var decisionExpiry int
 
 // is the resources cache enabled?
 var keycloakResourcesCacheEnabled bool = true
@@ -74,7 +74,7 @@ var keycloakResourcesCacheEnabled bool = true
 var keycloakResourcesCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
 
 // expiry for resources cache entries
-var resourcesExpiry int64
+var resourcesExpiry int
 
 // factory instance for the client
 var keycloakClientFactory KeycloakClientFactoryI = &KeycloackClientFactory{}

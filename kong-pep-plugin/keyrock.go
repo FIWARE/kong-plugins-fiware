@@ -10,9 +10,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// http client to be used for accessing keyrock
-var authorizationHttpClient httpClient = &http.Client{}
-
 // implementation of the PDP-inteface for keyrock
 type KeyrockPDP struct{}
 
@@ -83,6 +80,7 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 		return
 	}
 	if response.StatusCode != 200 {
+
 		log.Errorf("[Keyrock] Did not receive a successful response. Status: %v, Body: %v", response.StatusCode, response.Body)
 		return
 	}
