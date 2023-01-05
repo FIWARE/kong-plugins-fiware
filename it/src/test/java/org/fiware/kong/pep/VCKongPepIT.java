@@ -3,6 +3,7 @@ package org.fiware.kong.pep;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.awaitility.Awaitility;
 import org.fiware.kong.pep.model.BearerToken;
 import org.fiware.kong.pep.model.TokenResponse;
 import org.fiware.kong.pep.model.ishare.BackendInfo;
@@ -17,6 +18,7 @@ import org.fiware.kong.pep.model.ishare.Target;
 import org.fiware.kong.pep.model.vc.ConnectionString;
 import org.fiware.kong.pep.model.vc.CredentialHolder;
 import org.fiware.kong.pep.model.vc.VerifiableCredential;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -55,6 +57,46 @@ public class VCKongPepIT {
     private static final String TOKEN_HELPER_ADDRESS = "http://localhost:5060";
     private static final String PACKET_DELIVERY_AR_ADDRESS = "http://localhost:8050";
     private static final String ORION_PATH = "/orion-ext-authz";
+
+    @BeforeAll
+    public static void waitForComponents() throws Exception {
+        Awaitility.await().atMost(Duration.of(2, ChronoUnit.MINUTES))
+                .until(() -> {
+                    try {
+                        return HttpClient.newHttpClient()
+                                .send(HttpRequest.newBuilder()
+                                        .GET()
+                                        .uri(URI.create(VERIFIER_ADDRESS))
+                                        .build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+        Awaitility.await().atMost(Duration.of(2, ChronoUnit.MINUTES))
+                .until(() -> {
+                    try {
+                        return HttpClient.newHttpClient()
+                                .send(HttpRequest.newBuilder()
+                                        .GET()
+                                        .uri(URI.create(ISSUER_ADDRESS))
+                                        .build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+        Awaitility.await().atMost(Duration.of(2, ChronoUnit.MINUTES))
+                .until(() -> {
+                    try {
+                        return HttpClient.newHttpClient()
+                                .send(HttpRequest.newBuilder()
+                                        .GET()
+                                        .uri(URI.create(PACKET_DELIVERY_AR_ADDRESS))
+                                        .build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
+                    } catch (Exception e) {
+                        return false;
+                    }
+                });
+    }
 
     @Order(2)
     @DisplayName("Request the entity successfully with a VC.")
@@ -165,7 +207,7 @@ public class VCKongPepIT {
     private void setupIssuerPolicyInAR(String issuerId, List<String> allowedRoles) throws Exception {
         String policyCreateToken = getAccessToken(PACKET_DELIVERY_AR_ADDRESS, PACKET_DELIVERY_EORI, PACKET_DELIVERY_EORI);
 
-        PolicyCreate issuerPolicy = getIssuerPolicy(issuerId,allowedRoles);
+        PolicyCreate issuerPolicy = getIssuerPolicy(issuerId, allowedRoles);
         HttpResponse<String> response = HttpClient.newHttpClient().send(HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(OBJECT_MAPPER.writeValueAsString(issuerPolicy)))
                 .uri(URI.create(String.format("%s/ar/policy", PACKET_DELIVERY_AR_ADDRESS)))

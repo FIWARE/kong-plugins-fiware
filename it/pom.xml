@@ -159,6 +159,8 @@
                         <artifactId>maven-failsafe-plugin</artifactId>
                         <executions>
                             <execution>
+                                <id>test</id>
+                                <phase>integration-test</phase>
                                 <goals>
                                     <goal>integration-test</goal>
                                 </goals>
@@ -171,9 +173,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                        <configuration>
-                            <failIfNoTests>true</failIfNoTests>
-                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>io.kokuwa.maven</groupId>
@@ -198,6 +197,8 @@
                                         <portBinding>8090:80</portBinding>
                                         <portBinding>9090:9090</portBinding>
                                         <portBinding>8080:6080</portBinding>
+                                        <!-- pdc keyrock -->
+                                        <portBinding>8050:5080</portBinding>
                                         <portBinding>8070:8070</portBinding>
                                         <!-- backend happy pets-->
                                         <portBinding>3000:3000</portBinding>
