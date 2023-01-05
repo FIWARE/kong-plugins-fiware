@@ -175,7 +175,7 @@ spec:
       initContainers:
         - name: clear-stale-pid
           image: fiware/kong:latest
-          imagePullPolicy: Always
+          imagePullPolicy: Never
           command:
             - "rm"
             - "-vrf"
@@ -247,7 +247,7 @@ spec:
       containers:
         - name: "proxy"
           image: fiware/kong:latest
-          imagePullPolicy: Always
+          imagePullPolicy: Never
           env:
             - name: KONG_ADMIN_ACCESS_LOG
               value: /dev/stdout
