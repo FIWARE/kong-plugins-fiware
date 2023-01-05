@@ -39,7 +39,7 @@ data:
             config:
               pathprefix: "/orion-keyrock"
               authorizationendpointtype: Keyrock
-              authorizationendpointaddress: http://keyrock:8080/user
+              authorizationendpointaddress: http://keyrock:6080/user
               keyrockappid: 7c902139-d4d0-461a-bb14-7fa29aa143fe
               decisioncacheexpiryins: 10
 
