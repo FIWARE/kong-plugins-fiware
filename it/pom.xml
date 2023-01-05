@@ -24,6 +24,7 @@
         <version.org.apache.maven.plugins.jar>3.2.2</version.org.apache.maven.plugins.jar>
         <version.com.fasterxml.jackson>2.13.3</version.com.fasterxml.jackson>
         <version.org.keycloak>18.0.0</version.org.keycloak>
+        <version.org.projectlombok>1.18.24</version.org.projectlombok>
     </properties>
 
     <dependencyManagement>
@@ -40,6 +41,11 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${version.org.projectlombok}</version>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -59,6 +65,11 @@
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-admin-client</artifactId>
             <version>${version.org.keycloak}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.6</version>
         </dependency>
         <!-- test -->
         <dependency>
@@ -126,6 +137,19 @@
             <id>default</id>
             <build>
                 <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <configuration>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>org.projectlombok</groupId>
+                                    <artifactId>lombok</artifactId>
+                                    <version>${version.org.projectlombok}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </plugin>
                     <!-- run tests -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -165,6 +189,12 @@
                                         <portBinding>9090:9090</portBinding>
                                         <portBinding>8080:6080</portBinding>
                                         <portBinding>8070:8070</portBinding>
+                                        <!-- backend happy pets-->
+                                        <portBinding>3000:3000</portBinding>
+                                        <!-- backend packet delivery-->
+                                        <portBinding>3001:3001</portBinding>
+                                        <!-- jwt helper -->
+                                        <portBinding>5060:5060</portBinding>
                                     </portBindings>
                                 </configuration>
                             </execution>
@@ -209,28 +239,35 @@
                                     <streamLogs>true</streamLogs>
                                     <dockerImages>
                                         <dockerImage>${kong.image}</dockerImage>
-                                        <dockerImage>dsba</dockerImage>
-                                        <dockerImage>waltid</dockerImage>
                                     </dockerImages>
                                     <portBindings>
                                         <portBinding>8090:80</portBinding>
                                         <portBinding>9090:9090</portBinding>
                                         <portBinding>8080:6080</portBinding>
-                                        <portBinding>8050:5080</portBinding>
                                         <portBinding>8070:8070</portBinding>
                                         <portBinding>8040:8080</portBinding>
-                                        <!-- walt-id packetdelivery-->
+                                        <!-- Keyrock pdp -->
+                                        <portBinding>8050:5080</portBinding>
+                                        <!-- walt-id packet delivery-->
                                         <portBinding>7000:7000</portBinding>
                                         <portBinding>7001:7001</portBinding>
                                         <portBinding>7002:7002</portBinding>
                                         <portBinding>7003:7003</portBinding>
                                         <portBinding>7004:7004</portBinding>
-                                        <!-- walt-id happypets-->
+                                        <!-- walt-id happy pets-->
                                         <portBinding>6000:6000</portBinding>
                                         <portBinding>6001:6001</portBinding>
                                         <portBinding>6002:6002</portBinding>
                                         <portBinding>6003:6003</portBinding>
                                         <portBinding>6004:6004</portBinding>
+                                        <!-- backend happy pets-->
+                                        <portBinding>3000:3000</portBinding>
+                                        <!-- backend packet delivery-->
+                                        <portBinding>3001:3001</portBinding>
+                                        <!-- jwt helper -->
+                                        <portBinding>5060:5060</portBinding>
+                                        <!-- satellite -->
+                                        <portBinding>6060:6060</portBinding>
                                     </portBindings>
                                 </configuration>
                             </execution>

@@ -41,6 +41,7 @@ data:
               authorizationendpointtype: Keyrock
               authorizationendpointaddress: http://keyrock:8080/user
               keyrockappid: 7c902139-d4d0-461a-bb14-7fa29aa143fe
+              decisioncacheexpiryins: 10
 
           - name: request-transformer
             config:
@@ -173,8 +174,8 @@ spec:
       automountServiceAccountToken: true
       initContainers:
         - name: clear-stale-pid
-          image: fiware/kong:latest
-          imagePullPolicy: Never
+          image: quay.io/fiware/kong:0.4.0-PRE-15
+          imagePullPolicy: Always
           command:
             - "rm"
             - "-vrf"
@@ -245,8 +246,8 @@ spec:
               mountPath: /kong_dbless/
       containers:
         - name: "proxy"
-          image: fiware/kong:latest
-          imagePullPolicy: Never
+          image: quay.io/fiware/kong:0.4.0-PRE-15
+          imagePullPolicy: Always
           env:
             - name: KONG_ADMIN_ACCESS_LOG
               value: /dev/stdout

@@ -226,11 +226,25 @@ spec:
       containers:
         - name: dsba-pdp
           imagePullPolicy: Always
-          image: "quay.io/wi_stefan/dsba-pdp:0.0.9-PRE-9"
+          image: "quay.io/fiware/dsba-pdp:0.2.1"
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 1
+            periodSeconds: 5
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 1
+            periodSeconds: 5
+            timeoutSeconds: 2
           env:
             - name: LOG_LEVEL
               value: "DEBUG"
@@ -252,6 +266,18 @@ spec:
               value: "mysql-trustedlist"
             - name: MYSQL_PORT
               value: "3306"
+            - name: ISHARE_TRUST_ANCHOR_URL
+              value: "http://satellite:6060"
+            - name: ISHARE_TRUST_ANCHOR_ID
+              value: "EU.EORI.FIWARESATELLITE"
+            - name: ISHARE_TRUST_ANCHOR_TOKEN_PATH
+              value: "/token"
+            - name: ISHARE_TRUSTED_LIST_ENABLED
+              value: "true"
+            - name: ISHARE_TRUSTED_FINGERPRINTS_LIST
+              value: "D2F62092F982CF783D4632BD86FA86C3FBFDB2D8C8A58BC6809163FCF5CD030B"
+            - name: PROVIDER_ID
+              value: "EU.EORI.PACKETDELIVERY"
           volumeMounts:
             - name: ishare-certs
               mountPath: /iShare/

@@ -1,4 +1,70 @@
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: waltid-happypets-sm
+data:
+  service-matrix.properties: |
+    id.walt.services.ecosystems.essif.didebsi.DidEbsiService=id.walt.services.ecosystems.essif.didebsi.WaltIdDidEbsiService
+    id.walt.services.ecosystems.essif.jsonrpc.JsonRpcService=id.walt.services.ecosystems.essif.jsonrpc.WaltIdJsonRpcService
+    id.walt.services.vc.JsonLdCredentialService=id.walt.services.vc.WaltIdJsonLdCredentialService
+    id.walt.services.vc.JwtCredentialService=id.walt.services.vc.WaltIdJwtCredentialService
+    id.walt.services.crypto.CryptoService=id.walt.services.crypto.SunCryptoService
+    id.walt.services.keystore.KeyStoreService=id.walt.services.keystore.SqlKeyStoreService
+    id.walt.services.key.KeyService=id.walt.services.key.WaltIdKeyService
+    id.walt.services.jwt.JwtService=id.walt.services.jwt.WaltIdJwtService
+    id.walt.services.vcstore.VcStoreService=id.walt.services.vcstore.FileSystemVcStoreService
+    id.walt.services.hkvstore.HKVStoreService=id.walt.services.hkvstore.FileSystemHKVStore:config/fsStore.conf
+    id.walt.services.context.ContextManager=id.walt.services.context.WaltIdContextManager
+    id.walt.signatory.Signatory=id.walt.signatory.WaltIdSignatory:/config/signatory.conf
+    id.walt.custodian.Custodian=id.walt.custodian.WaltIdCustodian
+    id.walt.auditor.Auditor=id.walt.auditor.WaltIdAuditor
+    id.walt.services.ecosystems.gaiax.GaiaxService=id.walt.services.ecosystems.gaiax.WaltIdGaiaxService
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: waltid-happypets-cm
+data:
+  signatory.conf: |
+    proofConfig {
+      issuerDid="To-be-decided"
+      issuerVerificationMethod="todo"
+      proofType="LD_PROOF"
+      domain="TEST"
+      nonce="todo"
+    }
+    templatesFolder: "/templates"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: waltid-happypets-templates
+data:
+  PacketDeliveryService.json: |
+    {
+      "@context": ["https://www.w3.org/2018/credentials/v1"],
+      "credentialSchema": {
+        "id": "https://raw.githubusercontent.com/hesusruiz/dsbamvf/main/schemas/PacketDeliveryService/2022-10/schema.json",
+        "type": "FullJsonSchemaValidator2021"
+      },
+      "credentialSubject": {
+        "familyName": "Ruiz",
+        "firstName": "Jesus",
+        "id": "did:ebsi:2AEMAqXWKYMu1JHPAgGcga4dxu7ThgfgN95VyJBJGZbSJUtp",
+        "roles": [{
+          "names": ["P.Info.gold"],
+          "target": "did:elsi:packetdelivery"
+        }]
+      },
+      "id": "urn:uuid:3add94f4-28ec-42a1-8704-4e4aa51006b4",
+      "issued": "2021-08-31T00:00:00Z",
+      "issuer": "did:ebsi:2A9BZ9SUe6BatacSpvs1V5CdjHvLpQ7bEsi2Jb6LdHKnQxaN",
+      "validFrom": "2021-08-31T00:00:00Z",
+      "issuanceDate": "2021-08-31T00:00:00Z",
+      "type": ["VerifiableCredential", "PacketDeliveryService"]
+    }
+---
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -17,7 +83,7 @@ spec:
     spec:
       containers:
         - name: waltid-happypets
-          image: wistefan/waltid-ssikit:0.0.1
+          image: wistefan/waltid:0.0.1-SNAPSHOT
           imagePullPolicy: Always
           args:
             - serve
@@ -34,6 +100,29 @@ spec:
               name: auditor-api
             - containerPort: 7004
               name: essif-api
+          volumeMounts:
+            - mountPath: /app/data
+              name: data-volume
+            - mountPath: /templates
+              name: templates-volume
+            - mountPath: /config
+              name: config-volume
+            - mountPath: /app/service-matrix.properties
+              name: sm-volume
+              subPath: service-matrix.properties
+      volumes:
+        - name: data-volume
+          emptyDir:
+            sizeLimit: 500Mi
+        - name: config-volume
+          configMap:
+            name: waltid-happypets-cm
+        - name: templates-volume
+          configMap:
+            name: waltid-happypets-templates
+        - name: sm-volume
+          configMap:
+            name: waltid-happypets-sm
 ---
 kind: Service
 apiVersion: v1
