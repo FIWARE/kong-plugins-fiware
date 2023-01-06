@@ -32,11 +32,15 @@ public class KeycloakKongPepIT {
 	public static void waitForKeycloak() throws Exception {
 		Awaitility.await().atMost(Duration.of(2, ChronoUnit.MINUTES))
 				.until(() -> {
+					try {
 						return HttpClient.newHttpClient()
 								.send(HttpRequest.newBuilder()
 										.GET()
 										.uri(URI.create(KEYCLOAK_ADDRESS))
 										.build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
+					} catch (Exception e) {
+						return false;
+					}
 				});
 		//wait for the config to be present
 		Thread.sleep(30000);

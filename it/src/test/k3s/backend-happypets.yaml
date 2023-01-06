@@ -1,0 +1,113 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-happypets-cm
+data:
+  server.yaml: |
+    server:
+      listenAddress: "0.0.0.0:3000"
+      staticDir: "back/www"
+      templateDir: "back/views"
+      environment: development
+      loglevel: DEBUG
+
+    store:
+      driverName: "sqlite3"
+      dataSourceName: "file:/db/issuer.sqlite?mode=rwc&cache=shared&_fk=1"
+
+    issuer:
+      id: HappyPets
+      name: HappyPets
+      password: ThePassword
+      store:
+        driverName: "sqlite3"
+        dataSourceName: "file:/db/issuer.sqlite?mode=rwc&cache=shared&_fk=1"
+
+    verifier:
+      id: PacketDelivery
+      name: PacketDelivery
+      password: ThePassword
+      store:
+        driverName: "sqlite3"
+        dataSourceName: "file:/db/verifier.sqlite?mode=rwc&cache=shared&_fk=1"
+      protectedResource:
+        url: ""
+
+    verifiableregistry:
+      password: ThePassword
+      store:
+        driverName: "sqlite3"
+        dataSourceName: "file:/db/verifiableregistry.sqlite?mode=rwc&cache=shared&_fk=1"
+
+    wallet:
+      store:
+        driverName: "sqlite3"
+        dataSourceName: "file:/db/wallet.sqlite?mode=rwc&cache=shared&_fk=1"
+
+    ssikit:
+      coreURL: http://waltid-happypets:6000
+      signatoryURL: http://waltid-happypets:6001
+      auditorURL: http://waltid-happypets:6003
+      custodianURL: http://waltid-happypets:6002
+      essifURL: http://waltid-happypets:6004
+
+    webauthn:
+      RPDisplayName: "Gaia-X AISBL"
+      RPID: "localhost"
+      RPOrigin: "http://localhost:3000"
+      AuthenticatorAttachment: "platform"
+      UserVerification: "required"
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: backend-happypets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-happypets
+  template:
+    metadata:
+      labels:
+        app: backend-happypets
+      annotations:
+        deployment/id: "_DEFAULT_DEPLOYMENT_"
+    spec:
+      containers:
+        - name: backend-happypets
+          image: wistefan/verifier:0.0.1-SNAPSHOT
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: api
+          env:
+            - name: CONFIG_FILE
+              value: /configs/server.yaml
+          volumeMounts:
+            - mountPath: /configs/
+              name: config-volume
+            - mountPath: /db/
+              name: db-volume
+      volumes:
+        - name: config-volume
+          configMap:
+            name: backend-happypets-cm
+        - name: db-volume
+          emptyDir:
+            sizeLimit: 500Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend-happypets
+spec:
+  type: LoadBalancer
+  ports:
+    - name: api
+      port: 3000
+      targetPort: api
+      protocol: TCP
+  selector:
+    app: backend-happypets
