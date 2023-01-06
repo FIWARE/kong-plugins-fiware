@@ -96,4 +96,4 @@ jobs:
       - name: Execute test
         run: |
           cd it/
-          mvn integration-test
+          mvn verify

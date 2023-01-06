@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: waltid-packetdelivery
-          image: wistefan/waltid-ssikit:0.0.1
+          image: wistefan/waltid:0.0.1-SNAPSHOT
           imagePullPolicy: Always
           args:
             - serve
