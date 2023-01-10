@@ -215,7 +215,7 @@ spec:
       serviceAccountName: default
       initContainers:
         - name: db-migrate
-          image: "quay.io/fiware/dsba-db-migrations:0.3.0"
+          image: "quay.io/fiware/dsba-db-migrations:0.3.1"
           imagePullPolicy: Always
           command: ["rel", "migrate"]
           env:
@@ -226,7 +226,7 @@ spec:
       containers:
         - name: dsba-pdp
           imagePullPolicy: Always
-          image: "quay.io/fiware/dsba-pdp:0.3.0"
+          image: "quay.io/fiware/dsba-pdp:0.3.1"
           ports:
             - name: http
               containerPort: 8080
@@ -280,6 +280,8 @@ spec:
               value: "EU.EORI.PACKETDELIVERY"
             - name: TRUSTED_VERIFIERS
               value: "http://backend-packetdelivery:3001/verifier/.well-known/jwks"
+            - name: JWK_UPDATE_INTERVAL_IN_S
+              value: "1"
           volumeMounts:
             - name: ishare-certs
               mountPath: /iShare/
