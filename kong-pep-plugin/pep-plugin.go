@@ -31,7 +31,7 @@ type Config struct {
 	// expiry time for keycloaks resource cache
 	KeycloakResourceCacheExpiryInS int64
 	// expiry time for the decision cache, -1 disables the cache
-	DecisionCacheExpiryInS int64
+	DecisionCacheExpiryInS string
 	// path prefix used, will be removed before handling
 	PathPrefix string
 }
@@ -102,14 +102,14 @@ func (k Kong) Exit(code int, msq string) {
 }
 
 // version of the plugin to be presented - should be set at build time
-var Version string = "test"
+var Version string
 
 // we want to be executed before the request transformer(801) can strip the token, but allow verfication of the token(e.g. jwt(1005) or oauth(1004) plugin before)
 // see current order: https://docs.konghq.com/gateway/latest/plugin-development/custom-logic/#plugins-execution-order
 var DefaultPriority = 805
 
 // default expiry for decision caching
-var DefaultExpiry int64 = 60
+var DefaultExpiry int = 60
 
 // pdp implementation for keyrock
 var keyrockPDP PDP = &KeyrockPDP{}

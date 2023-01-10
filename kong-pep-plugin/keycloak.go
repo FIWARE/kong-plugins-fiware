@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -268,8 +269,9 @@ func buildClaimToken(conf *Config, requestInfo *RequestInfo) (token string, err 
 }
 
 func initKeycloackResourcesCache(config *Config) {
-	resourcesExpiry = config.DecisionCacheExpiryInS
-	if resourcesExpiry == -1 {
+	resourcesExpiryStr := config.DecisionCacheExpiryInS
+	resourcesExpiry, err := strconv.Atoi(resourcesExpiryStr)
+	if err != nil || resourcesExpiry == -1 {
 		log.Debugf("[Keycloak] Resource caching is disabled.")
 		keycloakResourcesCacheEnabled = false
 		return
@@ -280,8 +282,9 @@ func initKeycloackResourcesCache(config *Config) {
 }
 
 func initKeycloakDecisionCache(config *Config) {
-	decisionExpiry = config.DecisionCacheExpiryInS
-	if decisionExpiry == -1 {
+	decisionExpiryStr := config.DecisionCacheExpiryInS
+	decisionExpiry, err := strconv.Atoi(decisionExpiryStr)
+	if err != nil || decisionExpiry == -1 {
 		log.Debugf("[Keycloak] Decision caching is disabled.")
 		keycloakCacheEnabled = false
 		return

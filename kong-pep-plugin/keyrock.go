@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	cache "github.com/patrickmn/go-cache"
@@ -105,8 +106,9 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 }
 
 func initKeyrockCache(config *Config) {
-	var expiry = config.DecisionCacheExpiryInS
-	if expiry == -1 {
+	var expiryStr = config.DecisionCacheExpiryInS
+	expiry, err := strconv.Atoi(expiryStr)
+	if err != nil || expiry == -1 {
 		log.Infof("[Keyrock] Decision caching is disabled.")
 		keyrockCacheEnabled = false
 		return
