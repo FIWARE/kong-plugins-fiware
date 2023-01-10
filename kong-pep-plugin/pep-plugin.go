@@ -29,9 +29,9 @@ type Config struct {
 	// optional claims to be added when accessing keycloak. key is the claim to be used, value the header to get the claim from
 	KeycloackAdditionalClaims map[string]string
 	// expiry time for keycloaks resource cache
-	KeycloakResourceCacheExpiryInS int
+	KeycloakResourceCacheExpiryInS int `yaml:"keycloakresourcecacheexpiryins"`
 	// expiry time for the decision cache, -1 disables the cache
-	DecisionCacheExpiryInS int
+	DecisionCacheExpiryInS int `yaml:"decisioncacheexpiryins"`
 	// path prefix used, will be removed before handling
 	PathPrefix string
 }
