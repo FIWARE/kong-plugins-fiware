@@ -280,6 +280,7 @@ spec:
               value: "EU.EORI.PACKETDELIVERY"
             - name: TRUSTED_VERIFIERS
               value: "http://backend-packetdelivery:3001/verifier/.well-known/jwks"
+            # very low to prevent race-condition on test-startup. Not recommended and required in real environments.
             - name: JWK_UPDATE_INTERVAL_IN_S
               value: "1"
           volumeMounts:
