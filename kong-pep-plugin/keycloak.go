@@ -269,7 +269,7 @@ func buildClaimToken(conf *Config, requestInfo *RequestInfo) (token string, err 
 }
 
 func initKeycloackResourcesCache(config *Config) {
-	resourcesExpiryStr := config.DecisionCacheExpiryInS
+	resourcesExpiryStr := config.KeycloakResourceCacheExpiryInS
 	resourcesExpiry, err := strconv.Atoi(resourcesExpiryStr)
 	if err != nil || resourcesExpiry == -1 {
 		log.Debugf("[Keycloak] Resource caching is disabled.")
