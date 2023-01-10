@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -66,7 +65,7 @@ var keycloakCacheEnabled bool = true
 var keycloakDecisionCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
 
 // expiry for decision cache entries
-var decisionExpiry int
+var decisionExpiry int64
 
 // is the resources cache enabled?
 var keycloakResourcesCacheEnabled bool = true
@@ -75,7 +74,7 @@ var keycloakResourcesCacheEnabled bool = true
 var keycloakResourcesCache *cache.Cache = cache.New(time.Duration(DefaultExpiry)*time.Second, time.Duration(2*DefaultExpiry)*time.Second)
 
 // expiry for resources cache entries
-var resourcesExpiry int
+var resourcesExpiry int64
 
 // factory instance for the client
 var keycloakClientFactory KeycloakClientFactoryI = &KeycloackClientFactory{}
@@ -269,10 +268,8 @@ func buildClaimToken(conf *Config, requestInfo *RequestInfo) (token string, err 
 }
 
 func initKeycloackResourcesCache(config *Config) {
-	resourcesExpiryStr := config.DecisionCacheExpiryInS
-	resourcesExpiry, err := strconv.Atoi(resourcesExpiryStr)
-
-	if err != nil || resourcesExpiry == -1 {
+	resourcesExpiry = config.DecisionCacheExpiryInS
+	if resourcesExpiry == -1 {
 		log.Debugf("[Keycloak] Resource caching is disabled.")
 		keycloakResourcesCacheEnabled = false
 		return
@@ -283,9 +280,8 @@ func initKeycloackResourcesCache(config *Config) {
 }
 
 func initKeycloakDecisionCache(config *Config) {
-	decisionExpiryStr := config.DecisionCacheExpiryInS
-	decisionExpiry, err := strconv.Atoi(decisionExpiryStr)
-	if err != nil || decisionExpiry == -1 {
+	decisionExpiry = config.DecisionCacheExpiryInS
+	if decisionExpiry == -1 {
 		log.Debugf("[Keycloak] Decision caching is disabled.")
 		keycloakCacheEnabled = false
 		return

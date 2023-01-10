@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	cache "github.com/patrickmn/go-cache"
@@ -86,9 +85,8 @@ func (ExtAuthzPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *
 }
 
 func initExtAuthzCache(config *Config) {
-	expiryStr := config.DecisionCacheExpiryInS
-	expiry, err := strconv.Atoi(expiryStr)
-	if err != nil || expiry == -1 {
+	var expiry = config.DecisionCacheExpiryInS
+	if expiry == -1 {
 		log.Infof("[ExtAuthz] Decision caching is disabled.")
 		extAuthzCacheEnabled = false
 		return

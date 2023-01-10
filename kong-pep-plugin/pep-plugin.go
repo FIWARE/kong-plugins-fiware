@@ -28,10 +28,11 @@ type Config struct {
 	KeycloakClientSecret string
 	// optional claims to be added when accessing keycloak. key is the claim to be used, value the header to get the claim from
 	KeycloackAdditionalClaims map[string]string
+	NewField                  string
 	// expiry time for keycloaks resource cache
-	KeycloakResourceCacheExpiryInS string
+	KeycloakResourceCacheExpiryInS int64
 	// expiry time for the decision cache, -1 disables the cache
-	DecisionCacheExpiryInS string
+	DecisionCacheExpiryInS int64
 	// path prefix used, will be removed before handling
 	PathPrefix string
 }
@@ -109,7 +110,7 @@ var Version string
 var DefaultPriority = 805
 
 // default expiry for decision caching
-var DefaultExpiry int = 60
+var DefaultExpiry int64 = 60
 
 // pdp implementation for keyrock
 var keyrockPDP PDP = &KeyrockPDP{}
