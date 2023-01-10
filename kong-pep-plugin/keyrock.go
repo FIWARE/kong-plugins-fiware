@@ -108,8 +108,13 @@ func (KeyrockPDP) Authorize(conf *Config, requestInfo *RequestInfo) (decision *b
 func initKeyrockCache(config *Config) {
 	var expiryStr = config.DecisionCacheExpiryInS
 	expiry, err := strconv.Atoi(expiryStr)
-	if err != nil || expiry == -1 {
-		log.Infof("[Keyrock] Decision caching is disabled.")
+	if err != nil {
+		log.Warnf("[Keyrock] Decision cache not properly configured: %s", expiryStr)
+		keyrockCacheEnabled = false
+		return
+	}
+	if expiry == -1 {
+		log.Info("[Keyrock] Decision caching is disabled.")
 		keyrockCacheEnabled = false
 		return
 	}
@@ -117,5 +122,6 @@ func initKeyrockCache(config *Config) {
 		log.Infof("[Keyrock] Use default expiry of %vs.", DefaultExpiry)
 		expiry = DefaultExpiry
 	}
+	keyrockCacheEnabled = true
 	keyrockDecisionCache = cache.New(time.Duration(expiry)*time.Second, time.Duration(2*expiry)*time.Second)
 }
