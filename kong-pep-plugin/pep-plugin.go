@@ -28,7 +28,6 @@ type Config struct {
 	KeycloakClientSecret string
 	// optional claims to be added when accessing keycloak. key is the claim to be used, value the header to get the claim from
 	KeycloackAdditionalClaims map[string]string
-	NewField                  string
 	// expiry time for keycloaks resource cache
 	KeycloakResourceCacheExpiryInS int64
 	// expiry time for the decision cache, -1 disables the cache
@@ -103,7 +102,7 @@ func (k Kong) Exit(code int, msq string) {
 }
 
 // version of the plugin to be presented - should be set at build time
-var Version string
+var Version string = "test"
 
 // we want to be executed before the request transformer(801) can strip the token, but allow verfication of the token(e.g. jwt(1005) or oauth(1004) plugin before)
 // see current order: https://docs.konghq.com/gateway/latest/plugin-development/custom-logic/#plugins-execution-order
