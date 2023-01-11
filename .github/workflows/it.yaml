@@ -97,23 +97,3 @@ jobs:
         run: |
           cd it/
           mvn verify
-
-      - name: Collect logs
-        if: ${{ failure() }}
-        run: |
-          export KUBECONFIG=/tmp/k3s-maven-plugin/mount/kubeconfig.yaml && kubectl get all --all-namespaces
-          DSBA=dsba-pdp
-          for p in $(kubectl get pods | grep ^${DSBA}- | cut -f 1 -d ' '); do 
-              echo --------------------------- 
-              echo $p 
-              echo --------------------------- 
-              kubectl logs $p
-          done
-          PACKET=backend-packetdelivery
-          for p in $(kubectl get pods | grep ^${PACKET}- | cut -f 1 -d ' '); do 
-              echo --------------------------- 
-              echo $p 
-              echo --------------------------- 
-              kubectl logs $p
-          done
-

@@ -186,7 +186,7 @@
                                     <goal>start</goal>
                                     <goal>image</goal>
                                     <goal>kubectl</goal>
-<!--                                    <goal>rm</goal>-->
+                                    <goal>rm</goal>
                                 </goals>
                                 <configuration>
                                     <streamLogs>true</streamLogs>
@@ -201,26 +201,12 @@
                                         <portBinding>8040:8080</portBinding>
                                         <!-- Keyrock pdp -->
                                         <portBinding>8050:5080</portBinding>
-                                        <!-- walt-id packet delivery-->
-                                        <portBinding>7000:7000</portBinding>
-                                        <portBinding>7001:7001</portBinding>
-                                        <portBinding>7002:7002</portBinding>
-                                        <portBinding>7003:7003</portBinding>
-                                        <portBinding>7004:7004</portBinding>
-                                        <!-- walt-id happy pets-->
-                                        <portBinding>6000:6000</portBinding>
-                                        <portBinding>6001:6001</portBinding>
-                                        <portBinding>6002:6002</portBinding>
-                                        <portBinding>6003:6003</portBinding>
-                                        <portBinding>6004:6004</portBinding>
                                         <!-- backend happy pets-->
                                         <portBinding>3000:3000</portBinding>
                                         <!-- backend packet delivery-->
                                         <portBinding>3001:3001</portBinding>
                                         <!-- jwt helper -->
                                         <portBinding>5060:5060</portBinding>
-                                        <!-- satellite -->
-                                        <portBinding>6060:6060</portBinding>
                                     </portBindings>
                                 </configuration>
                             </execution>

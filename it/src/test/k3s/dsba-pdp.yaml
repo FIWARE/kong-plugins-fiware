@@ -215,7 +215,7 @@ spec:
       serviceAccountName: default
       initContainers:
         - name: db-migrate
-          image: "quay.io/fiware/dsba-db-migrations:0.3.1"
+          image: "quay.io/fiware/dsba-db-migrations:0.3.2"
           imagePullPolicy: Always
           command: ["rel", "migrate"]
           env:
@@ -226,7 +226,7 @@ spec:
       containers:
         - name: dsba-pdp
           imagePullPolicy: Always
-          image: "quay.io/fiware/dsba-pdp:0.3.2-PRE-22"
+          image: "quay.io/fiware/dsba-pdp:0.3.2"
           ports:
             - name: http
               containerPort: 8080
