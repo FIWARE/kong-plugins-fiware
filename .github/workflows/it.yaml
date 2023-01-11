@@ -96,4 +96,11 @@ jobs:
       - name: Execute test
         run: |
           cd it/
-          mvn verify
+          mvn verify -Pdev
+
+      - name: Collect logs
+        if: ${{ failure() }}
+        run: |
+          export KUBECONFIG=/tmp/k3s-maven-plugin/mount/kubeconfig.yaml && kubectl get all --all-namespaces
+      
+      
