@@ -102,5 +102,10 @@ jobs:
         if: ${{ failure() }}
         run: |
           export KUBECONFIG=/tmp/k3s-maven-plugin/mount/kubeconfig.yaml && kubectl get all --all-namespaces
-      
-      
+          DEPLOYMENT=dsba-pdp
+          for p in $(kubectl get pods | grep ^${DEPLOYMENT}- | cut -f 1 -d ' '); do 
+              echo --------------------------- 
+              echo $p 
+              echo --------------------------- 
+              kubectl logs $p
+          done
