@@ -111,49 +111,49 @@ func TestDescisionCaching(t *testing.T) {
 
 	tests := []test{
 		{testName: "Successful requests should be served from the cache",
-			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
+			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: "10", KeycloakResourceCacheExpiryInS: "10"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getPermitResponse(),
 			expectCacheHit:   true,
 			expectedDecision: true,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock internal error.",
-			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
+			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: "10", KeycloakResourceCacheExpiryInS: "10"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getNonOkResponse(500),
 			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock forbidden error.",
-			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
+			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: "10", KeycloakResourceCacheExpiryInS: "10"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getNonOkResponse(403),
 			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock deny-response.",
-			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
+			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: "10", KeycloakResourceCacheExpiryInS: "10"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getDenyResponse(),
 			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock invalid response.",
-			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
+			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: "10", KeycloakResourceCacheExpiryInS: "10"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getNonJsonResponse(),
 			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock invalid response.",
-			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
+			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: "10", KeycloakResourceCacheExpiryInS: "10"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockResponse:     getInvalidResponse(),
 			expectedDecision: false,
 			expectCacheHit:   false,
 		},
 		{testName: "Unsuccessful requests should not be cached - Deny requests on keyrock request errors.",
-			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 10},
+			testConfig:       Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: "10", KeycloakResourceCacheExpiryInS: "10"},
 			testRequest:      RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"},
 			mockError:        errors.New("Something went wrong"),
 			expectedDecision: false,
@@ -194,7 +194,7 @@ func TestCacheExpiry(t *testing.T) {
 
 	authorizationHttpClient = &mockHttpClient{mockDoResponse: getPermitResponse()}
 	// config with expiry 1s, to not let the test run to long
-	testConfig := Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: 1}
+	testConfig := Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: "1"}
 	testRequest := RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"}
 
 	// first call
@@ -219,7 +219,7 @@ func TestCacheDisabled(t *testing.T) {
 
 	authorizationHttpClient = &mockHttpClient{mockDoResponse: getPermitResponse()}
 	// config with expiry -1s, e.g. caching disable
-	testConfig := Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: -1}
+	testConfig := Config{AuthorizationEndpointType: "Keyrock", KeyrockAppId: "AppId", DecisionCacheExpiryInS: "-1"}
 	testRequest := RequestInfo{Method: "GET", Path: "/my-path", AuthorizationHeader: "Bearer myToken"}
 
 	// first call

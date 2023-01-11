@@ -66,7 +66,7 @@ public class VCKongPepIT {
                         return HttpClient.newHttpClient()
                                 .send(HttpRequest.newBuilder()
                                         .GET()
-                                        .uri(URI.create(VERIFIER_ADDRESS))
+                                        .uri(URI.create(String.format("%s/verifier/.well-known/jwks",VERIFIER_ADDRESS)))
                                         .build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
                     } catch (Exception e) {
                         return false;
@@ -116,7 +116,8 @@ public class VCKongPepIT {
         assertTrue(sendCredential(parsedString, verifiableCredential), "The credential should have been successfully accepted.");
 
         String jwt = getJwt(parsedString.state);
-        assertEquals(404, requestContextBroker(jwt, "urn:ngsi-ld:DELIVERYORDER:1").statusCode(), "The request should have been allowed.");
+        HttpResponse<String> response = requestContextBroker(jwt, "urn:ngsi-ld:DELIVERYORDER:1");
+        assertEquals(404, response.statusCode(), String.format("The request should have been allowed. But was: %s", response.body()));
     }
 
     @Order(3)
