@@ -226,7 +226,7 @@ spec:
       containers:
         - name: dsba-pdp
           imagePullPolicy: Always
-          image: "quay.io/fiware/dsba-pdp:0.3.1"
+          image: "quay.io/fiware/dsba-pdp:0.3.2-PRE-22"
           ports:
             - name: http
               containerPort: 8080
