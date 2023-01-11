@@ -96,7 +96,7 @@ jobs:
       - name: Execute test
         run: |
           cd it/
-          mvn verify -Pdev
+          mvn verify
 
       - name: Collect logs
         if: ${{ failure() }}
