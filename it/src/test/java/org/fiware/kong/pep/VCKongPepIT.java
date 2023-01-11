@@ -116,7 +116,7 @@ public class VCKongPepIT {
         assertTrue(sendCredential(parsedString, verifiableCredential), "The credential should have been successfully accepted.");
 
         String jwt = getJwt(parsedString.state);
-        HttpResponse<String> response = requestContextBroker(jwt, "urn:ngsi-ld:DELIVERYORDER:1")
+        HttpResponse<String> response = requestContextBroker(jwt, "urn:ngsi-ld:DELIVERYORDER:1");
         assertEquals(404, response.statusCode(), String.format("The request should have been allowed. But was: %s", response.body()));
     }
 
