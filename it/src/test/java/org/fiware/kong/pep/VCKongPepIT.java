@@ -66,7 +66,7 @@ public class VCKongPepIT {
                         return HttpClient.newHttpClient()
                                 .send(HttpRequest.newBuilder()
                                         .GET()
-                                        .uri(URI.create(VERIFIER_ADDRESS))
+                                        .uri(URI.create(String.format("%s/verifier/.well-known/jwks",VERIFIER_ADDRESS)))
                                         .build(), HttpResponse.BodyHandlers.ofString()).statusCode() == 200;
                     } catch (Exception e) {
                         return false;
