@@ -2,6 +2,7 @@
 
 [![](https://nexus.lab.fiware.org/repository/raw/public/badges/chapters/api-management.svg)](https://www.fiware.org/developers/catalogue/)
 [![License badge](https://img.shields.io/github/license/FIWARE/kong-plugins-fiware.svg)](https://opensource.org/licenses/MIT)
+[![Docker badge](https://img.shields.io/badge/quay.io-fiware%2Fkong-grey?logo=red%20hat&labelColor=EE0000)](https://quay.io/repository/fiware/kong)
 [![](https://img.shields.io/badge/tag-fiware-orange.svg?logo=stackoverflow)](http://stackoverflow.com/questions/tagged/fiware)
 <br>
 ![CI](https://github.com/fiware/kong-plugins-fiware/actions/workflows/test.yml/badge.svg)
