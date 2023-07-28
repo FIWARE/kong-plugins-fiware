@@ -1,4 +1,4 @@
-ARG BASE=ubuntu:latest
+ARG BASE=ubuntu:20.04
 FROM ${BASE}
 
 ARG PONGO_VERSION=1.3.0
