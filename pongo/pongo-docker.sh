@@ -12,7 +12,7 @@
 
 function main {
 
-  PONGO_VERSION_DEFAULT="1.1.0"
+  PONGO_VERSION_DEFAULT="2.7.0"
   IMAGE_NAME_DEFAULT="pongo"  
   KONG_VERSION_DEFAULT="2.8.1"
   #KONG_IMAGE_DEFAULT="kong/kong-alpine"

@@ -5,7 +5,7 @@ on:
 
 env:
   IMAGE_NAME: pongo
-  PONGO_VERSION: 1.1.0
+  PONGO_VERSION: 2.7.0
   KONG_VERSION: 2.8.1
 
   # Static value, only used to fulfill rockspec format

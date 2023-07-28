@@ -1,7 +1,7 @@
 ARG BASE=ubuntu:latest
 FROM ${BASE}
 
-ARG PONGO_VERSION=1.1.0
+ARG PONGO_VERSION=2.7.0
 
 USER root
 
