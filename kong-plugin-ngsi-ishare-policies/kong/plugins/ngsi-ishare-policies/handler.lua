@@ -145,6 +145,12 @@ function NgsiIshareHandler:access(config)
    req_dict.post_args = kong.request.get_query()
    req_dict.uri_args = kong.request.get_query()
 
+   -- Debug output of request body
+   if req_dict.body_data then
+      kong.log.debug("Received request body:")
+      kong.log.debug(req_dict.body_data)
+   end
+   
    -- Call iSHARE handler
    local err = ishare.handle_ngsi_request(proxy_config, req_dict)
    if err then
