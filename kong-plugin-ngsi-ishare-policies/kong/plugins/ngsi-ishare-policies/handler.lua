@@ -152,6 +152,7 @@ function NgsiIshareHandler:access(config)
    end
    
    -- Call iSHARE handler
+   kong.log.debug("Evaluate NGSI-LD request...")
    local err = ishare.handle_ngsi_request(proxy_config, req_dict)
    if err then
       -- Access not granted
